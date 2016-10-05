@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher.iml" filepath="$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_generated.iml" filepath="$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_generated.iml" group="ymlai87416.price.fetcher" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_jpaModelgen.iml" filepath="$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_jpaModelgen.iml" group="ymlai87416.price.fetcher" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_main.iml" filepath="$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_main.iml" group="ymlai87416.price.fetcher" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_test.iml" filepath="$PROJECT_DIR$/.idea/modules/ymlai87416.price.fetcher_test.iml" group="ymlai87416.price.fetcher" />
+    </modules>
+  </component>
+</project>
