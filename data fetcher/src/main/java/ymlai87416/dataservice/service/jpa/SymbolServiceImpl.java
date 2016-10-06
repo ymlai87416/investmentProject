@@ -1,21 +1,43 @@
 package ymlai87416.dataservice.service.jpa;
 
+import ymlai87416.dataservice.domain.Exchange;
+import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.service.SymbolService;
+
+import java.util.List;
 
 /**
  * Created by Tom on 6/10/2016.
  */
 public class SymbolServiceImpl implements SymbolService {
-    List<Symbol> listAllSymbol();
 
-    List<Symbol> listAllSymbolByExchange(Exchange exchange);
+    @Override
+    public List<Symbol> listAllSymbol() {
+        return null;
+    }
 
-    List<Symbol> searchSymbol(Symbol symbol);
+    @Override
+    public List<Symbol> listAllSymbolByExchange(Exchange exchange) {
+        return null;
+    }
 
-    void saveSymbol(Symbol symbol);
+    @Override
+    public List<Symbol> searchSymbol(Symbol symbol) {
+        return null;
+    }
 
-    void deleteSymbol(Symbol symbol);
+    @Override
+    public void saveSymbol(Symbol symbol) {
 
-    void deleteSymbolByExchange(Exchange exchange);
+    }
 
+    @Override
+    public void deleteSymbol(Symbol symbol) {
+
+    }
+
+    @Override
+    public void deleteSymbolByExchange(Exchange exchange) {
+
+    }
 }

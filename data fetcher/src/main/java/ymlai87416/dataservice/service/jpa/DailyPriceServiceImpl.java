@@ -1,19 +1,39 @@
 package ymlai87416.dataservice.service.jpa;
 
+import ymlai87416.dataservice.domain.DailyPrice;
+import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.service.DailyPriceService;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by Tom on 6/10/2016.
  */
 public class DailyPriceServiceImpl implements DailyPriceService{
-    public getAllDailyPrice(Symbol symbol);
 
-    public getDailyPriceBySymbolAndDateRange(Symbol symbol, Date startDate, Date endDate);
+    @Override
+    public List<DailyPrice> getAllDailyPrice(Symbol symbol) {
+        return null;
+    }
 
-    public deleteDailyPrice(DailyPrice dailyPrice);
+    @Override
+    public List<DailyPrice> getDailyPriceBySymbolAndDateRange(Symbol symbol, Date startDate, Date endDate) {
+        return null;
+    }
 
-    public saveDailyPrice(DailyPrice dailyPrice);
+    @Override
+    public void deleteDailyPrice(DailyPrice dailyPrice) {
 
-    public deleteDailyPriceBySymbol(Symbol symbol);
+    }
 
+    @Override
+    public void saveDailyPrice(DailyPrice dailyPrice) {
+
+    }
+
+    @Override
+    public void deleteDailyPriceBySymbol(Symbol symbol) {
+
+    }
 }
