@@ -1,5 +1,6 @@
 package ymlai87416.dataservice.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.Symbol;
 
@@ -16,9 +17,11 @@ public interface DailyPriceService {
 
     void deleteDailyPrice(DailyPrice dailyPrice);
 
-    void saveDailyPrice(DailyPrice dailyPrice);
+    DailyPrice saveDailyPrice(DailyPrice dailyPrice);
 
-    void deleteDailyPriceBySymbol(Symbol symbol);
+    List<DailyPrice> saveDailyPriceInBatch(List<DailyPrice> dailyPriceList);
+
+    int deleteDailyPriceBySymbol(Symbol symbol);
 
 
 }

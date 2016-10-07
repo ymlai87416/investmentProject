@@ -7,7 +7,7 @@ import java.sql.Date;
  * Created by Tom on 6/10/2016.
  */
 public class DataVendor {
-    private long id;
+    private Long id;
     private long version;
     private String name;
     private String websiteUrl;
@@ -18,11 +18,11 @@ public class DataVendor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

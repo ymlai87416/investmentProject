@@ -7,28 +7,28 @@ import java.sql.Date;
  * Created by Tom on 6/10/2016.
  */
 public class DailyPrice {
-    private long id;
+    private Long id;
     private long version;
     private DataVendor dataVendor;
     private Symbol symbol;
     private java.sql.Date priceDate;
     private java.sql.Date createdDate;
     private java.sql.Date lastUpdatedDate;
-    private double openPrice;
-    private double highPrice;
-    private double lowPrice;
-    private double closePrice;
-    private double adjClosePrice;
-    private long volume;
+    private Double openPrice;
+    private Double highPrice;
+    private Double lowPrice;
+    private Double closePrice;
+    private Double adjClosePrice;
+    private Long volume;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -90,56 +90,56 @@ public class DailyPrice {
     }
 
     @Column(name = "open_price")
-    public double getOpenPrice() {
+    public Double getOpenPrice() {
         return openPrice;
     }
 
-    public void setOpenPrice(double openPrice) {
+    public void setOpenPrice(Double openPrice) {
         this.openPrice = openPrice;
     }
 
     @Column(name = "high_price")
-    public double getHighPrice() {
+    public Double getHighPrice() {
         return highPrice;
     }
 
-    public void setHighPrice(double highPrice) {
+    public void setHighPrice(Double highPrice) {
         this.highPrice = highPrice;
     }
 
     @Column(name = "low_price")
-    public double getLowPrice() {
+    public Double getLowPrice() {
         return lowPrice;
     }
 
-    public void setLowPrice(double lowPrice) {
+    public void setLowPrice(Double lowPrice) {
         this.lowPrice = lowPrice;
     }
 
     @Column(name = "close_price")
-    public double getClosePrice() {
+    public Double getClosePrice() {
         return closePrice;
     }
 
-    public void setClosePrice(double closePrice) {
+    public void setClosePrice(Double closePrice) {
         this.closePrice = closePrice;
     }
 
     @Column(name = "adj_close_price")
-    public double getAdjClosePrice() {
+    public Double getAdjClosePrice() {
         return adjClosePrice;
     }
 
-    public void setAdjClosePrice(double adjClosePrice) {
+    public void setAdjClosePrice(Double adjClosePrice) {
         this.adjClosePrice = adjClosePrice;
     }
 
     @Column(name = "volume")
-    public long getVolume() {
+    public Long getVolume() {
         return volume;
     }
 
-    public void setVolume(long volume) {
+    public void setVolume(Long volume) {
         this.volume = volume;
     }
 }

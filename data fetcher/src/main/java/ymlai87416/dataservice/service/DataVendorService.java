@@ -12,7 +12,7 @@ public interface DataVendorService {
 
     List<DataVendor> searchDataVendor(DataVendor dataVendor);
 
-    void saveDataVendor(DataVendor dataVendor);
+    DataVendor saveDataVendor(DataVendor dataVendor);
 
     void deleteDataVendor(DataVendor dataVendor);
 }

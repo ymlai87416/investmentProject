@@ -12,7 +12,7 @@ public interface ExchangeService {
 
     List<Exchange> searchExchange(Exchange exchange);
 
-    void saveExchange(Exchange exchange);
+    Exchange saveExchange(Exchange exchange);
 
     void deleteExchange(Exchange exchange);
 }

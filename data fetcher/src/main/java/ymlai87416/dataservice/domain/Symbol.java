@@ -7,14 +7,14 @@ import java.sql.Date;
  * Created by Tom on 6/10/2016.
  */
 public class Symbol {
-    private long id;
+    private Long id;
     private long version;
     private Exchange exchange;
     private String ticker;
     private String instrument;
     private String name;
     private String sector;
-    private int lot;
+    private Integer lot;
     private String currency;
     private java.sql.Date createdDate;
     private java.sql.Date lastUpdatedDate;
@@ -22,11 +22,11 @@ public class Symbol {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -87,11 +87,11 @@ public class Symbol {
     }
 
     @Column(name = "lot")
-    public int getLot() {
+    public Integer getLot() {
         return lot;
     }
 
-    public void setLot(int lot) {
+    public void setLot(Integer lot) {
         this.lot = lot;
     }
 

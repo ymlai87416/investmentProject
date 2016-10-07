@@ -15,10 +15,10 @@ public interface SymbolService {
 
     List<Symbol> searchSymbol(Symbol symbol);
 
-    void saveSymbol(Symbol symbol);
+    Symbol saveSymbol(Symbol symbol);
 
     void deleteSymbol(Symbol symbol);
 
-    void deleteSymbolByExchange(Exchange exchange);
+    int deleteSymbolByExchange(Exchange exchange);
 
 }
