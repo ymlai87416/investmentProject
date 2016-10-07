@@ -32,7 +32,7 @@ public class MainApp {
 
     public void run(){
         //run the following first
-        //HKExSymbolFetcher to check any difference
+        //HKExStockSymbolFetcher to check any difference
         //YahooStockPriceFetcher to check for new daily price update
         //HKExStockOptionPriceFetcher to check for new daily price update
     }
