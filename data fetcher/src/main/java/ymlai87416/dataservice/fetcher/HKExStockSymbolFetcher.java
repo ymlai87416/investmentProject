@@ -5,45 +5,39 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
-import ymlai87416.dataservice.Exception.PageFormatChangedException;
-import ymlai87416.dataservice.Exception.ParseException;
+import org.springframework.stereotype.Component;
+import ymlai87416.dataservice.exception.PageFormatChangedException;
+import ymlai87416.dataservice.exception.ParseException;
 import ymlai87416.dataservice.Utilities.Utilities;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
-import ymlai87416.dataservice.fetcher.exchange.HKExFetcher;
+import ymlai87416.dataservice.fetcher.exchange.Exchanges;
+import ymlai87416.dataservice.service.ExchangeService;
 import ymlai87416.dataservice.service.SymbolService;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Created by Tom on 6/10/2016.
  */
-public class HKExStockSymbolFetcher extends HKExFetcher {
-    String configFile;
-    Properties properties;
+@Component
+public class HKExStockSymbolFetcher implements Fetcher{
 
     final String url = "http://www.hkex.com.hk/eng/market/sec_tradinfo/stockcode/eisdeqty.htm";
-    final String stockTableClassName = "table_grey_border";
     final String instrumentType = "Stock";
+
+    @Autowired
+    ExchangeService exchangeService;
 
     @Autowired
     SymbolService symbolService;
 
-    public boolean test(){
-
-        return true;
-    }
-
+    @Override
     public synchronized boolean run(){
         try{
-            Exchange exchange = getExchangeFromDatbase();
-            if(exchange == null)
-                saveExchangeToDatebase();
-
             List<Symbol> symbols = parseFrontPage();
 
             for(Symbol symbol : symbols)
@@ -71,23 +65,29 @@ public class HKExStockSymbolFetcher extends HKExFetcher {
         for(Element record : records){
 
             String url;
-            Symbol symbol = new Symbol();
+
 
             Elements cell = record.select("td");
 
-            symbol.setTicker(cell.get(0).text());
-            symbol.setName(cell.get(1).text());
 
             url = cell.get(1).child(0).html();
 
             int lot;
-            String lotstr = cell.get(2).text();
+            String lotStr = cell.get(2).text();
             try{
-                lot = Integer.parseInt(lotstr);
+                lot = Integer.parseInt(lotStr);
             }
             catch(Exception ex){
                 lot = 1;
             }
+
+            Exchange exchange = getOrSaveExchange(exchangeService, Exchanges.HKExchange);
+
+            Symbol symbol = new Symbol();
+            symbol.setExchange(exchange);
+            symbol.setTicker(cell.get(0).text());
+            symbol.setInstrument("Stock");
+            symbol.setName(cell.get(1).text());
             symbol.setLot(lot);
 
             SymbolInfo info = new SymbolInfo(symbol, url);
@@ -120,16 +120,12 @@ public class HKExStockSymbolFetcher extends HKExFetcher {
         symbol.setCurrency(cells.get(20).text().trim());
         symbol.setInstrument(instrumentType);
         symbol.setSector(cells.get(14).text().trim());
-        symbol.setExchange(HKExhange);
         symbol.setCreatedDate(Utilities.getCurrentSQLDate());
         symbol.setLastUpdatedDate(Utilities.getCurrentSQLDate());
 
         return symbol;
     }
 
-    public void loadConfig(){
-
-    }
 
     class SymbolInfo{
         Symbol symbol;

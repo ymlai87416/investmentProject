@@ -14,5 +14,5 @@ public interface DataVendorService {
 
     DataVendor saveDataVendor(DataVendor dataVendor);
 
-    void deleteDataVendor(DataVendor dataVendor);
+    int deleteDataVendor(DataVendor dataVendor);
 }

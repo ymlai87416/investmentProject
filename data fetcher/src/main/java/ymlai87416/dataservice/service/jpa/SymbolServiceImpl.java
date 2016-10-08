@@ -93,11 +93,19 @@ public class SymbolServiceImpl implements SymbolService {
     }
 
     @Override
-    public void deleteSymbol(Symbol symbol) {
-        Symbol mergeExchange = em.merge(symbol);
-        em.remove(mergeExchange);
-        log.info("Symbol repository with id: " + symbol.getId()
-                + " deleted successfully");
+    public int deleteSymbol(Symbol symbol) {
+        try{
+            Symbol mergeExchange = em.merge(symbol);
+            em.remove(mergeExchange);
+            log.info("Symbol repository with id: " + symbol.getId()
+                    + " deleted successfully");
+            return 1;
+        }
+        catch(Exception ex){
+            log.error("Symbol object does not exist in the database", ex);
+            return 0;
+        }
+
     }
 
     @Override

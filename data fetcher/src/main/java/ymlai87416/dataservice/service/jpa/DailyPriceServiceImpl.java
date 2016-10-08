@@ -53,11 +53,18 @@ public class DailyPriceServiceImpl implements DailyPriceService{
     }
 
     @Override
-    public void deleteDailyPrice(DailyPrice dailyPrice) {
-        DailyPrice mergePrice = em.merge(dailyPrice);
-        em.remove(mergePrice);
-        log.info("DailyPrice repository with id: " + dailyPrice.getId()
-                + " deleted successfully");
+    public int deleteDailyPrice(DailyPrice dailyPrice) {
+        try{
+            DailyPrice mergePrice = em.merge(dailyPrice);
+            em.remove(mergePrice);
+            log.info("DailyPrice repository with id: " + dailyPrice.getId()
+                    + " deleted successfully");
+            return 1;
+        }
+        catch(IllegalArgumentException ex){
+            log.error("Daily price object does not exist in the database", ex);
+            return 0;
+        }
     }
 
     @Override

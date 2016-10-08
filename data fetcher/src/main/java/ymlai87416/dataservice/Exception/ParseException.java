@@ -1,4 +1,4 @@
-package ymlai87416.dataservice.Exception;
+package ymlai87416.dataservice.exception;
 
 /**
  * Created by Tom on 7/10/2016.

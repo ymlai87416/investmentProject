@@ -75,10 +75,18 @@ public class DataVendorServiceImpl implements DataVendorService {
     }
 
     @Override
-    public void deleteDataVendor(DataVendor dataVendor) {
-        DataVendor mergeDataVendor = em.merge(dataVendor);
-        em.remove(mergeDataVendor);
-        log.info("Data vendor repository with id: " + dataVendor.getId()
-                + " deleted successfully");
+    public int deleteDataVendor(DataVendor dataVendor) {
+        try{
+            DataVendor mergeDataVendor = em.merge(dataVendor);
+            em.remove(mergeDataVendor);
+            log.info("Data vendor repository with id: " + dataVendor.getId()
+                    + " deleted successfully");
+            return 1;
+        }
+        catch(IllegalArgumentException ex){
+            log.error("Data vendor object does not exist in the database", ex);
+            return 0;
+        }
+
     }
 }

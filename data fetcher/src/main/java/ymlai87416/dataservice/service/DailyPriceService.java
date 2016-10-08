@@ -15,13 +15,11 @@ public interface DailyPriceService {
 
     List<DailyPrice> getDailyPriceBySymbolAndDateRange(Symbol symbol, Date startDate, Date endDate);
 
-    void deleteDailyPrice(DailyPrice dailyPrice);
+    int deleteDailyPrice(DailyPrice dailyPrice);
 
     DailyPrice saveDailyPrice(DailyPrice dailyPrice);
 
     List<DailyPrice> saveDailyPriceInBatch(List<DailyPrice> dailyPriceList);
 
     int deleteDailyPriceBySymbol(Symbol symbol);
-
-
 }

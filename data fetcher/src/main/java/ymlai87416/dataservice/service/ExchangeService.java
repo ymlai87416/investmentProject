@@ -14,5 +14,5 @@ public interface ExchangeService {
 
     Exchange saveExchange(Exchange exchange);
 
-    void deleteExchange(Exchange exchange);
+    int deleteExchange(Exchange exchange);
 }

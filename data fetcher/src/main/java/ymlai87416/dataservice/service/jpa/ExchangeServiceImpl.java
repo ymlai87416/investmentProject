@@ -55,10 +55,18 @@ public class ExchangeServiceImpl implements ExchangeService {
     }
 
     @Override
-    public void deleteExchange(Exchange exchange) {
-        Exchange mergeExchange = em.merge(exchange);
-        em.remove(mergeExchange);
-        log.info("Exchange repository with id: " + exchange.getId()
-                + " deleted successfully");
+    public int deleteExchange(Exchange exchange) {
+        try{
+            Exchange mergeExchange = em.merge(exchange);
+            em.remove(mergeExchange);
+            log.info("Exchange repository with id: " + exchange.getId()
+                    + " deleted successfully");
+            return 1;
+        }
+        catch(Exception ex){
+            log.error("Exchange object does not exist in the database", ex);
+            return 0;
+        }
+
     }
 }

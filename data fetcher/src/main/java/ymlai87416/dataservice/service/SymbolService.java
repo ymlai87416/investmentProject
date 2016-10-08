@@ -17,8 +17,7 @@ public interface SymbolService {
 
     Symbol saveSymbol(Symbol symbol);
 
-    void deleteSymbol(Symbol symbol);
+    int deleteSymbol(Symbol symbol);
 
     int deleteSymbolByExchange(Exchange exchange);
-
 }
