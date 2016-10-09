@@ -45,7 +45,7 @@ public class MainApp {
         clearDatabase(ctx);
         //testPersistenceLayer(ctx);
 
-        //testHKExStockOptionPriceFetcher(ctx);
+        testHKExStockOptionPriceFetcher(ctx);
         testHKExStockSymbolFetcher(ctx);
         testYahooHKStockPriceFetcher(ctx);
     }

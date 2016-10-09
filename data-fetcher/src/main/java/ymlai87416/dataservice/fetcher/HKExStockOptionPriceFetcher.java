@@ -16,11 +16,9 @@ import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.exception.ParseException;
 import ymlai87416.dataservice.fetcher.datavendor.DataVendors;
 import ymlai87416.dataservice.fetcher.exchange.Exchanges;
-import ymlai87416.dataservice.service.DailyPriceService;
-import ymlai87416.dataservice.service.DataVendorService;
-import ymlai87416.dataservice.service.ExchangeService;
-import ymlai87416.dataservice.service.SymbolService;
+import ymlai87416.dataservice.service.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +34,7 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
 
     static final String url = "http://www.hkex.com.hk/chi/ddp/most_active_contracts_c.asp?marketid=4";
     static final SimpleDateFormat parser=new SimpleDateFormat("dd/MM/yyyy hh:mm zzz");
+    static final String dataFile =  "option_daily.html";
 
     @Autowired
     ExchangeService exchangeService;
@@ -49,13 +48,21 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
     @Autowired
     DailyPriceService dailyPriceService;
 
+    @Autowired
+    MasterBackup masterBackup;
+
     @Override
     public synchronized boolean run(){
         try{
-            Document doc = Jsoup.connect(url).get();
-            java.sql.Date priceDate = parsePriceDate(doc);
+            File file = initMasterBackup();
+
             Exchange exchange = getOrSaveExchange(exchangeService, Exchanges.HKExchange);
             DataVendor dataVendor = getOrSaveDataVendor(dataVendorService, DataVendors.HKExDataVendor);
+
+            //Document doc = Jsoup.connect(url).get();
+            File input = new File(file.getAbsolutePath() + File.separator + dataFile);
+            Document doc = Jsoup.parse(input, "UTF-8", url);
+            java.sql.Date priceDate = parsePriceDate(doc);
 
             if(priceDate == null)
                 log.error(String.format("Cannot retrieve price data from url: %s", url));
@@ -77,6 +84,66 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
         }
 
         return true;
+    }
+
+    private File initMasterBackup(){
+        File previousFolder = masterBackup.retrievedLatestBatchFolder(this.getClass());
+
+        boolean readExistingFolder = true;
+        if(previousFolder == null){
+            readExistingFolder = false;
+        }
+        else{
+            if(!checkCompleteMark(previousFolder))
+                readExistingFolder = false;
+        }
+
+        if(readExistingFolder) {
+            log.info("Use cached web page");
+            return masterBackup.retrievedLatestBatchFolder(this.getClass());
+        }
+        else {
+            log.info("Download web page from HKEx");
+            File newFolder = masterBackup.getCurrentBatchFolder(this.getClass());
+            downloadFileToMasterBackup(newFolder);
+            return newFolder;
+        }
+    }
+
+    private boolean checkCompleteMark(File file){
+        try {
+            String completeMarkPath = file.getAbsolutePath() + File.separator + ".complete";
+            File completeMark = new File(completeMarkPath);
+
+            return completeMark.exists();
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    private void createCompleteMark(File file){
+        try {
+            String completeMarkPath = file.getAbsolutePath() + File.separator + ".complete";
+            File completeMark = new File(completeMarkPath);
+
+            completeMark.createNewFile();
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    private void downloadFileToMasterBackup(File masterDirectory){
+        try{
+            String destination = masterDirectory.getAbsolutePath() + File.separator + dataFile;
+            Utilities.downloadWebPageToFile(url, destination);
+            createCompleteMark(masterDirectory);
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
     }
 
     private ArrayList<PriceTimeSequence> parsePricePage(Document doc, Exchange exchange, DataVendor dataVendor, java.sql.Date priceDate) throws IOException, ParseException{
@@ -233,7 +300,5 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
         Symbol symbol;
         DailyPrice dailyPrice;
     }
-
-
 }
 

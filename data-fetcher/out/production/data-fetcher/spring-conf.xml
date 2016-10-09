@@ -21,11 +21,14 @@
 
     <bean id="emf" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="dataSource" ref="dataSource"/>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+        </property>
         <property name="packagesToScan"
-                  value="ymlai87416.price.domain"/>
+                  value="ymlai87416.dataservice.domain"/>
         <property name="jpaProperties">
             <props>
-                <prop key="hibernate.dialect">org.hibernate.dialect.mysqldialect</prop>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
                 <prop key="hibernate.max_fetch_depth">3</prop>
                 <prop key="hibernate.jdbc.fetch_size">50</prop>
                 <prop key="hibernate.jdbc.batch_size">10</prop>
@@ -35,7 +38,7 @@
     </bean>
 
     <bean id="dataSource"
-          class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+          class="org.apache.commons.dbcp.BasicDataSource"
           destroy-method="close">
         <property name="driverClassName">
             <value>${jdbc.driverClassName}</value>
@@ -54,6 +57,6 @@
 
     <context:annotation-config/>
     <context:component-scan
-            base-package="ymlai87416.price.service.jpa"/>
+            base-package="ymlai87416.dataservice"/>
 
 </beans>
