@@ -1,11 +1,12 @@
 package ymlai87416.dataservice.service.jpa;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ymlai87416.dataservice.Utilities.Utilities;
 import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
@@ -31,7 +32,7 @@ import java.util.List;
 @Transactional
 public class DailyPriceServiceImpl implements DailyPriceService{
 
-    private Log log = LogFactory.getLog(DailyPriceServiceImpl.class);
+    private Logger log = LoggerFactory.getLogger(DailyPriceServiceImpl.class);
 
     @PersistenceContext
     private EntityManager em;
@@ -40,7 +41,7 @@ public class DailyPriceServiceImpl implements DailyPriceService{
     @Transactional(readOnly=true)
     public List<DailyPrice> getAllDailyPrice(Symbol symbol) {
         TypedQuery<DailyPrice> query = em.createQuery(
-                "select p from DailyPrice p where p.symbol=:s" , DailyPrice.class);
+                "select p from DailyPrice p where p.symbol=:s order by priceDate" , DailyPrice.class);
         query = query.setParameter("s", symbol);
 
         return query.getResultList();
@@ -179,6 +180,19 @@ public class DailyPriceServiceImpl implements DailyPriceService{
         List<DailyPrice> result = query.getResultList();
 
         return result;
+    }
+
+    @Override
+    public java.sql.Date getLastestDailyPriceDateForSymbol(Symbol symbol) {
+        TypedQuery<java.util.Date> query = em.createQuery("SELECT max(p.priceDate) from DailyPrice p where p.symbol =:symbol"
+                                                            , java.util.Date.class);
+        query = query.setParameter("symbol", symbol);
+
+        java.util.Date date = query.getSingleResult();
+        if(date == null)
+            return null;
+        else
+            return Utilities.convertUtilDateToSqlDate(date);
     }
 
     private int batchSize = 25;

@@ -84,7 +84,7 @@ public class MasterBackupImpl implements MasterBackup {
     public File retrievedLatestBatchFolder(Class clazz) {
         java.util.Date currentDate = new java.util.Date();
         File masterFile = new File(masterFolder);
-        File pwd = new File(masterFile.getAbsolutePath() + File.separator + clazz.getName()+ sdf.format(currentDate));
+        File pwd = new File(masterFile.getAbsolutePath() + File.separator + clazz.getName()+ File.separator + sdf.format(currentDate));
 
         if (!Files.exists(pwd.toPath())) {
             return null;

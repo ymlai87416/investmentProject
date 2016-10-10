@@ -1,19 +1,20 @@
 package ymlai87416.dataservice.fetcher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ymlai87416.dataservice.Utilities.Utilities;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
-import ymlai87416.dataservice.exception.PageFormatChangedException;
 import ymlai87416.dataservice.exception.ParseException;
-import ymlai87416.dataservice.fetcher.exchange.Exchanges;
+import ymlai87416.dataservice.fetcher.constant.Exchanges;
+import ymlai87416.dataservice.fetcher.constant.FileEncoding;
+import ymlai87416.dataservice.fetcher.constant.Instruments;
 import ymlai87416.dataservice.service.ExchangeService;
 import ymlai87416.dataservice.service.MasterBackup;
 import ymlai87416.dataservice.service.SymbolService;
@@ -21,19 +22,21 @@ import ymlai87416.dataservice.service.SymbolService;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Created by Tom on 6/10/2016.
+ *
+ * TODO: Save all file in UTF-8 encoding
  */
-@Component
+@Component("HKExStockSymbolFetcher")
 public class HKExStockSymbolFetcher implements Fetcher{
 
-    private Log log = LogFactory.getLog(HKExStockSymbolFetcher.class);
+    private Logger log = LoggerFactory.getLogger(HKExStockSymbolFetcher.class);
 
     final String url = "http://www.hkex.com.hk/eng/market/sec_tradinfo/stockcode/eisdeqty.htm";
-    final String instrumentType = "Stock";
+    final String instrumentType = Instruments.STOCK;
     final String cacheFileName = ".cache";
 
     @Autowired
@@ -51,7 +54,11 @@ public class HKExStockSymbolFetcher implements Fetcher{
             File masterDir = initMasterBackup();
             boolean iscached = checkCompleteMark(masterDir);
 
-            List<Symbol> symbols = parseFrontPage(masterDir, iscached);
+            List<Symbol> symbols = parseFrontPage(masterDir, iscached, false);
+
+            if(!iscached)
+                createCompleteMark(masterDir);
+
             for(Symbol symbol : symbols)
                 symbolService.saveSymbol(symbol);
         }
@@ -67,16 +74,18 @@ public class HKExStockSymbolFetcher implements Fetcher{
         return true;
     }
 
-    private List<Symbol> parseFrontPage(File masterDir, boolean isCached) throws IOException, ParseException{
+    private List<Symbol> parseFrontPage(File masterDir, boolean isCached, boolean checkForUpdate) throws IOException, ParseException{
         TreeMap<String, String> urlToFileMapping = new TreeMap<String, String>();
         if(isCached){
             String cacheFilePath = masterDir.getAbsolutePath() + File.separator + cacheFileName;
-            try(BufferedReader br = new BufferedReader(new FileReader(cacheFilePath))) {
-                String key = br.readLine();
-                String value;
+            InputStreamReader isr = new InputStreamReader(new FileInputStream(cacheFilePath), FileEncoding.defaultFileEncoding);
+            BufferedReader br = new BufferedReader(isr);
+            try{
+                List<String> lines = br.lines().collect(Collectors.toList());
 
-                while (key != null) {
-                    value = br.readLine();
+                for(int i=0; i<lines.size(); i+=2){
+                    String key = lines.get(i);
+                    String value = masterDir.getAbsolutePath() + File.separator + lines.get(i+1);
                     urlToFileMapping.put(key, value);
                 }
             }
@@ -93,11 +102,11 @@ public class HKExStockSymbolFetcher implements Fetcher{
             String destination = masterDir.getAbsolutePath() + File.separator + "main";
             downloadFileToMasterBackup(masterDir, url, destination);
             File input = new File(destination);
-            doc = Jsoup.parse(input, "UTF-8", url);
+            doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
         }
         else{
             File input = new File(cacheFilePath);
-            doc = Jsoup.parse(input, "UTF-8", url);
+            doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
         }
 
         Element stockTable = doc.select("table.table_grey_border").first();
@@ -116,7 +125,7 @@ public class HKExStockSymbolFetcher implements Fetcher{
             url = cell.get(1).child(0).attr("abs:href");
 
             int lot;
-            String lotStr = cell.get(2).text();
+            String lotStr = cell.get(2).text().replace(",", "");
             try{
                 lot = Integer.parseInt(lotStr);
             }
@@ -128,14 +137,24 @@ public class HKExStockSymbolFetcher implements Fetcher{
 
             Symbol symbol = new Symbol();
             symbol.setExchange(exchange);
-            symbol.setTicker(cell.get(0).text());
-            symbol.setInstrument("Stock");
+            symbol.setTicker(convertStockNumberToTicker(cell.get(0).text()));
+            symbol.setInstrument(Instruments.STOCK);
             symbol.setName(cell.get(1).text());
             symbol.setLot(lot);
 
             SymbolInfo info = new SymbolInfo(symbol, url);
 
             symbolInfoList.add(info);
+        }
+
+        //if check for update, only deep down
+        if(checkForUpdate){
+            List<Symbol> existingSymbol = symbolService.listAllSymbolByExchange(Exchanges.HKExchange);
+
+            for(SymbolInfo symbolInfo : symbolInfoList){
+                if(existingSymbol.contains(symbolInfo))
+                    symbolInfoList.remove(symbolInfo);
+            }
         }
 
         //for each stock, download
@@ -145,9 +164,11 @@ public class HKExStockSymbolFetcher implements Fetcher{
             resultList.add(symbolInfo.symbol);
         }
 
-        createCompleteMark(masterDir);
-
         return resultList;
+    }
+
+    private String convertStockNumberToTicker(String stockNumber){
+        return stockNumber+".HK";
     }
 
     private Symbol parseIndividualPage(String url, Symbol symbol, File masterDir, TreeMap<String, String> urlToFileMapping) throws IOException, ParseException {
@@ -159,12 +180,12 @@ public class HKExStockSymbolFetcher implements Fetcher{
                 String destination = masterDir.getAbsolutePath() + File.separator + symbol.getTicker();
                 downloadFileToMasterBackup(masterDir, url, destination);
                 File input = new File(destination);
-                doc = Jsoup.parse(input, "UTF-8", url);
+                doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
             }
             else{
                 //use cache
                 File input = new File(cacheFIlePath);
-                doc = Jsoup.parse(input, "UTF-8", url);
+                doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
             }
         }
         else{
@@ -172,7 +193,7 @@ public class HKExStockSymbolFetcher implements Fetcher{
             String destination = masterDir.getAbsolutePath() + File.separator + symbol.getTicker();
             downloadFileToMasterBackup(masterDir, url, destination);
             File input = new File(destination);
-            doc = Jsoup.parse(input, "UTF-8", url);
+            doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
         }
 
         Elements tables = doc.select("table:contains(Company/Securities Name:)");
@@ -195,8 +216,8 @@ public class HKExStockSymbolFetcher implements Fetcher{
         symbol.setCurrency(cells.get(20).text().trim());
         symbol.setInstrument(instrumentType);
         symbol.setSector(cells.get(14).text().trim());
-        symbol.setCreatedDate(Utilities.getCurrentSQLDate());
-        symbol.setLastUpdatedDate(Utilities.getCurrentSQLDate());
+        symbol.setCreatedDate(Utilities.getCurrentSQLDateTime());
+        symbol.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
 
         return symbol;
     }
@@ -242,7 +263,8 @@ public class HKExStockSymbolFetcher implements Fetcher{
             String cacheFileNameAbsolutePath = masterDirectory.getAbsoluteFile() + File.separator + cacheFileName;
             PrintWriter writer = new PrintWriter(new FileOutputStream(new File(cacheFileNameAbsolutePath),true));
             writer.println(url);
-            writer.println(destination);
+            File fDestination = new File(destination);
+            writer.println(fDestination.getName());
             writer.close();
         } catch (Exception ex) {
             ex.printStackTrace();

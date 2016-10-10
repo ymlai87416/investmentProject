@@ -1,5 +1,7 @@
 package ymlai87416.dataservice;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.util.Assert;
@@ -11,15 +13,13 @@ import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.fetcher.HKExStockOptionPriceFetcher;
 import ymlai87416.dataservice.fetcher.HKExStockSymbolFetcher;
 import ymlai87416.dataservice.fetcher.YahooHKStockPriceFetcher;
-import ymlai87416.dataservice.fetcher.datavendor.DataVendors;
-import ymlai87416.dataservice.fetcher.exchange.Exchanges;
+import ymlai87416.dataservice.fetcher.constant.DataVendors;
+import ymlai87416.dataservice.fetcher.constant.Exchanges;
 import ymlai87416.dataservice.service.DailyPriceService;
 import ymlai87416.dataservice.service.DataVendorService;
 import ymlai87416.dataservice.service.ExchangeService;
 import ymlai87416.dataservice.service.SymbolService;
 
-import javax.rmi.CORBA.Util;
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +27,8 @@ import java.util.List;
  * Created by Tom on 6/10/2016.
  */
 public class MainApp {
+
+    private Logger log = LoggerFactory.getLogger(MainApp.class);
 
     public static void main(String[] args){
         MainApp instance = new MainApp();
@@ -42,11 +44,11 @@ public class MainApp {
     }
 
     public void test(ApplicationContext ctx){
-        clearDatabase(ctx);
+        //clearDatabase(ctx);
         //testPersistenceLayer(ctx);
 
-        testHKExStockOptionPriceFetcher(ctx);
-        testHKExStockSymbolFetcher(ctx);
+        //testHKExStockOptionPriceFetcher(ctx);
+        //testHKExStockSymbolFetcher(ctx);
         testYahooHKStockPriceFetcher(ctx);
     }
 

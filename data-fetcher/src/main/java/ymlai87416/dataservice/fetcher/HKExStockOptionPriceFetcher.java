@@ -1,11 +1,11 @@
 package ymlai87416.dataservice.fetcher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ymlai87416.dataservice.Utilities.Utilities;
@@ -14,8 +14,7 @@ import ymlai87416.dataservice.domain.DataVendor;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.exception.ParseException;
-import ymlai87416.dataservice.fetcher.datavendor.DataVendors;
-import ymlai87416.dataservice.fetcher.exchange.Exchanges;
+import ymlai87416.dataservice.fetcher.constant.*;
 import ymlai87416.dataservice.service.*;
 
 import java.io.File;
@@ -27,12 +26,15 @@ import java.util.TreeMap;
 
 /**
  * Created by Tom on 6/10/2016.
+ *
+ * TODO: Save in UTF-8 encoding
  */
-@Component
+@Component("HKExStockOptionPriceFetcher")
 public class HKExStockOptionPriceFetcher implements Fetcher{
-    private Log log = LogFactory.getLog(HKExStockOptionPriceFetcher.class);
+    private Logger log = LoggerFactory.getLogger(HKExStockOptionPriceFetcher.class);
 
     static final String url = "http://www.hkex.com.hk/chi/ddp/most_active_contracts_c.asp?marketid=4";
+    static final String urlEncoding = "Big5";
     static final SimpleDateFormat parser=new SimpleDateFormat("dd/MM/yyyy hh:mm zzz");
     static final String dataFile =  "option_daily.html";
 
@@ -59,9 +61,8 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
             Exchange exchange = getOrSaveExchange(exchangeService, Exchanges.HKExchange);
             DataVendor dataVendor = getOrSaveDataVendor(dataVendorService, DataVendors.HKExDataVendor);
 
-            //Document doc = Jsoup.connect(url).get();
             File input = new File(file.getAbsolutePath() + File.separator + dataFile);
-            Document doc = Jsoup.parse(input, "UTF-8", url);
+            Document doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
             java.sql.Date priceDate = parsePriceDate(doc);
 
             if(priceDate == null)
@@ -138,7 +139,7 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
     private void downloadFileToMasterBackup(File masterDirectory){
         try{
             String destination = masterDirectory.getAbsolutePath() + File.separator + dataFile;
-            Utilities.downloadWebPageToFile(url, destination);
+            Utilities.downloadWebPageToFile(url, destination, urlEncoding);
             createCompleteMark(masterDirectory);
         }
         catch(Exception ex){
@@ -165,13 +166,13 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
             symbol = new Symbol();
             symbol.setExchange(exchange);
             symbol.setTicker(contract);
-            symbol.setInstrument("Stock Option");
+            symbol.setInstrument(Instruments.STOCK_OPTION);
             symbol.setName(contract);
             symbol.setSector(null);
             symbol.setLot(null);
-            symbol.setCurrency("HKD");
-            symbol.setCreatedDate(Utilities.getCurrentSQLDate());
-            symbol.setLastUpdatedDate(Utilities.getCurrentSQLDate());
+            symbol.setCurrency(Currencies.HKD);
+            symbol.setCreatedDate(Utilities.getCurrentSQLDateTime());
+            symbol.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
 
             //get the symbol from db first or save it first.
 
@@ -188,15 +189,15 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
 
             price = new DailyPrice();
             price.setDataVendor(dataVendor);
-            price.setPriceDate(Utilities.getCurrentSQLDate());
+            price.setPriceDate(priceDate);
             price.setOpenPrice(opening);
             price.setClosePrice(close);
             price.setHighPrice(high);
             price.setLowPrice(low);
             price.setVolume(volume);
             price.setSymbol(symbol);
-            price.setCreatedDate(Utilities.getCurrentSQLDate());
-            price.setLastUpdatedDate(Utilities.getCurrentSQLDate());
+            price.setCreatedDate(Utilities.getCurrentSQLDateTime());
+            price.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
 
             timeSequenceList.add(new PriceTimeSequence(symbol, price));
         }
@@ -235,8 +236,8 @@ public class HKExStockOptionPriceFetcher implements Fetcher{
     private void savePriceTimeSequenceToDatabase(Exchange exchange, ArrayList<PriceTimeSequence> resultList, java.sql.Date priceDate){
         Symbol symbolSearchCriteria = new Symbol();
         symbolSearchCriteria.setExchange(exchange);
-        symbolSearchCriteria.setInstrument("Stock Option");
-        symbolSearchCriteria.setCurrency("HKD");
+        symbolSearchCriteria.setInstrument(Instruments.STOCK_OPTION);
+        symbolSearchCriteria.setCurrency(Currencies.HKD);
         List<Symbol> allStockOptionSymbolList = symbolService.searchSymbol(symbolSearchCriteria);
         List<Symbol> newSymbolForSave = new ArrayList<Symbol>();
         TreeMap<String, Symbol> symbolLookup = new TreeMap<String, Symbol>();

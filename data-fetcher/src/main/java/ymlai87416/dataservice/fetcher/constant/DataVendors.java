@@ -1,4 +1,4 @@
-package ymlai87416.dataservice.fetcher.datavendor;
+package ymlai87416.dataservice.fetcher.constant;
 
 import ymlai87416.dataservice.Utilities.Utilities;
 import ymlai87416.dataservice.domain.DataVendor;

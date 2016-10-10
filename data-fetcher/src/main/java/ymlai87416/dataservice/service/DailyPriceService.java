@@ -28,4 +28,6 @@ public interface DailyPriceService {
     int deleteAllDailyPrice();
 
     List<DailyPrice> searchDailyPrice(DailyPrice dailyPrice);
+
+    java.sql.Date getLastestDailyPriceDateForSymbol(Symbol symbol);
 }

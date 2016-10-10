@@ -1,11 +1,10 @@
 package ymlai87416.dataservice.service.jpa;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.service.SymbolService;
@@ -29,7 +28,7 @@ import java.util.List;
 @Transactional
 public class SymbolServiceImpl implements SymbolService {
 
-    private Log log = LogFactory.getLog(SymbolServiceImpl.class);
+    private Logger log = LoggerFactory.getLogger(SymbolServiceImpl.class);
 
     @PersistenceContext
     private EntityManager em;
