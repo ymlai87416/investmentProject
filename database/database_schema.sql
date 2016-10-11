@@ -67,3 +67,25 @@ CREATE TABLE daily_price (
 	KEY index_symbol_id (symbol_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+CREATE TABLE time_series(
+	id bigint NOT NULL AUTO_INCREMENT,
+	version bigint NOT NULL,
+	series_name varchar(255) NOT NULL,
+	category varchar(255) NOT NULL,
+	created_date datetime NOT NULL,
+	last_updated_date datetime NOT NULL,
+	PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE time_point(
+	id bigint NOT NULL AUTO_INCREMENT,
+	version bigint NOT NULL,
+	series_id bigint NOT NULL,
+	time_point_date bigint NOT NULL,
+	`value` decimal(19,4) NULL,
+	created_date datetime NOT NULL,
+	last_updated_date datetime NOT NULL,
+	PRIMARY KEY (id),
+	KEY index_series_id (series_id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+

@@ -8,6 +8,7 @@ import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
+import yahoofinance.quotes.stock.StockQuote;
 import ymlai87416.dataservice.Utilities.Utilities;
 import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.Symbol;
@@ -147,7 +148,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
                     DailyPrice lastTradingDayPriceDB = lastTradingPriceSearchResult.get(0);
                     DailyPrice lastTradingDayPriceNet = dailyPrices.get(0);
 
-                    if(lastTradingDayPriceDB.getPriceDate().compareTo(lastTradingDayPriceNet.getPriceDate()) == 0){
+                    if(lastTradingDayPriceDB.getPriceDate().compareTo(lastTradingDayPriceNet.getPriceDate()) != 0){
                         failedSymbol.add(symbol); //I should not be happening, we are missing points.
                         dailyPriceService.deleteDailyPriceBySymbol(symbol);
                         skipSave = true;
@@ -162,6 +163,11 @@ public class YahooHKStockPriceFetcher implements Fetcher{
                             skipSave = true;
                         }
                     }
+
+                    //TODO: remove the first price, as we are done with it.
+                    dailyPrices.remove(0);
+                    if(dailyPrices.size() == 0)
+                        skipSave = true;
                 }
 
                 //save symbol
@@ -227,6 +233,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
 
             dailyPrices.add(dailyPrice);
         }
+
 
         //this list has to be sorted in ascending order
         Collections.sort(dailyPrices, new Comparator<DailyPrice>(){
