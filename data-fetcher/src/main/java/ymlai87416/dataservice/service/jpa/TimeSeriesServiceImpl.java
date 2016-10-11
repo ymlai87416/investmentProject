@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.domain.TimeSeries;
 import ymlai87416.dataservice.service.TimeSeriesService;
 
@@ -60,44 +59,91 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
         // Query for a List of objects.
         CriteriaQuery cq = cb.createQuery();
-        Root e = cq.from(Symbol.class);
+        Root e = cq.from(TimeSeries.class);
 
         List<Predicate> criteriaList = new ArrayList<Predicate>();
         cq = cq.select(e);
-        if(symbol.getId() != null){
-            predicate = cb.equal(e.get("id"), symbol.getId());
+        if(timeSeries.getId() != null){
+            predicate = cb.equal(e.get("id"), timeSeries.getId());
             criteriaList.add(predicate);
         }
-        if(symbol.getExchange() != null) {
-            predicate = cb.equal(e.get("exchange"), symbol.getExchange());
+        if(timeSeries.getSeriesName() != null) {
+            predicate = cb.equal(e.get("seriesName"), timeSeries.getSeriesName());
+            criteriaList.add(predicate);
+        }
+        if(timeSeries.getCategory() != null) {
+            predicate = cb.equal(e.get("category"), timeSeries.getCategory());
             criteriaList.add(predicate);
         }
 
         cq.where(cb.and(criteriaList.toArray(new Predicate[0])));
 
         Query query = em.createQuery(cq);
-        List<Symbol> result = query.getResultList();
+        List<TimeSeries> result = query.getResultList();
 
         return result;
     }
 
     @Override
-    public TimeSeries saveTimeSeries(TimeSeriesService timeSeries) {
-        return null;
+    public TimeSeries saveTimeSeries(TimeSeries timeSeries) {
+        if (timeSeries.getId() == null) { // Insert repository
+            log.info("Inserting new time series");
+            em.persist(timeSeries);
+        } else { // Update repository
+            em.merge(timeSeries);
+            log.info("Updating existing time series");
+        }
+        log.info("Time series repository saved with id: " + timeSeries.getId());
+        return timeSeries;
     }
+
+    private int batchSize = 25;
 
     @Override
     public List<TimeSeries> saveTimeSeriesInBatch(List<TimeSeries> timeSeriesList) {
-        return null;
+        final List<TimeSeries> savedEntities = new ArrayList<TimeSeries>(timeSeriesList.size());
+        int i = 0;
+        for (TimeSeries t : timeSeriesList) {
+            savedEntities.add(persistOrMerge(t));
+            i++;
+            if (i % batchSize == 0) {
+                // Flush a batch of inserts and release memory.
+                em.flush();
+                em.clear();
+            }
+        }
+        return savedEntities;
+    }
+
+    private TimeSeries persistOrMerge(TimeSeries t) {
+        if (t.getId() == null) {
+            em.persist(t);
+            return t;
+        } else {
+            return em.merge(t);
+        }
     }
 
     @Override
     public int deleteTimeSeries(TimeSeries timeSeries) {
-        return 0;
+        try{
+            TimeSeries mergeExchange = em.merge(timeSeries);
+            em.remove(mergeExchange);
+            log.info("Time series repository with id: " + timeSeries.getId()
+                    + " deleted successfully");
+            return 1;
+        }
+        catch(Exception ex){
+            log.error("Time series object does not exist in the database", ex);
+            return 0;
+        }
     }
 
     @Override
     public int deleteAllTimeSeries() {
-        return 0;
+        Query query = em.createQuery("DELETE FROM TimeSeries s");
+        int deletedCount = query.executeUpdate();
+
+        return deletedCount;
     }
 }

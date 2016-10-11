@@ -12,7 +12,7 @@ import java.util.List;
  * Created by Tom on 12/10/2016.
  */
 public interface TimePointService {
-    List<TimePoint> getAllTimePoint(TimeSeries symbol);
+    List<TimePoint> getAllTimePoint(TimeSeries timeSeries);
 
     List<TimePoint> getTimePointBySymbolAndDateRange(TimeSeries timeSeries, Date startDate, Date endDate);
 
@@ -28,7 +28,7 @@ public interface TimePointService {
 
     int deleteAllTimePoint();
 
-    List<DailyPrice> searchTimePoint(TimePoint timePoint);
+    List<TimePoint> searchTimePoint(TimePoint timePoint);
 
     java.sql.Date getLastestTimePointDateForSymbol(TimeSeries timeSeries);
 }

@@ -28,11 +28,11 @@
                   value="ymlai87416.dataservice.domain"/>
         <property name="jpaProperties">
             <props>
-                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
-                <prop key="hibernate.max_fetch_depth">3</prop>
-                <prop key="hibernate.jdbc.fetch_size">50</prop>
-                <prop key="hibernate.jdbc.batch_size">10</prop>
-                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                <prop key="hibernate.max_fetch_depth">${hibernate.max_fetch_depth}</prop>
+                <prop key="hibernate.jdbc.fetch_size">${hibernate.jdbc.fetch_size}</prop>
+                <prop key="hibernate.jdbc.batch_size">${hibernate.jdbc.batch_size}</prop>
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
             </props>
         </property>
     </bean>
@@ -53,7 +53,8 @@
             <value>${jdbc.password}</value>
         </property>
     </bean>
-    <context:property-placeholder location="jdbc.properties"/>
+    <context:property-placeholder location="jdbc.properties" order="1"/>
+    <context:property-placeholder location="hibernate.properties" order="2"/>
 
     <context:annotation-config/>
     <context:component-scan

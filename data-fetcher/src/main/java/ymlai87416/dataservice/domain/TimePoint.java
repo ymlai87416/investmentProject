@@ -11,9 +11,9 @@ import java.sql.Date;
 public class TimePoint {
     private Long id;
     private long version;
-    private long seriesId;
+    private TimeSeries timeSeries;
     private java.sql.Date timePointDate;
-    private double value;
+    private Double value;
     private java.sql.Date createdDate;
     private java.sql.Date updatedDate;
 
@@ -40,12 +40,12 @@ public class TimePoint {
 
     @ManyToOne(fetch= FetchType.LAZY)
     @JoinColumn(name="series_id")
-    public long getSeriesId() {
-        return seriesId;
+    public TimeSeries getTimeSeries() {
+        return timeSeries;
     }
 
-    public void setSeriesId(long seriesId) {
-        this.seriesId = seriesId;
+    public void setTimeSeries(TimeSeries timeSeries) {
+        this.timeSeries = timeSeries;
     }
 
     @Column(name = "time_point_date")
@@ -58,11 +58,11 @@ public class TimePoint {
     }
 
     @Column(name = "value")
-    public double getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(double value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 

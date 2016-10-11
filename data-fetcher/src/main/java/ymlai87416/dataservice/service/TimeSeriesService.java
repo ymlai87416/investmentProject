@@ -16,7 +16,7 @@ public interface TimeSeriesService {
 
     List<TimeSeries> searchSymbol(TimeSeries timeSeries);
 
-    TimeSeries saveTimeSeries(TimeSeriesService timeSeries);
+    TimeSeries saveTimeSeries(TimeSeries timeSeries);
 
     List<TimeSeries> saveTimeSeriesInBatch(List<TimeSeries> timeSeriesList);
 
