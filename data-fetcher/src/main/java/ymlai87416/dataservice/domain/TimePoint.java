@@ -15,7 +15,7 @@ public class TimePoint {
     private java.sql.Date timePointDate;
     private Double value;
     private java.sql.Date createdDate;
-    private java.sql.Date updatedDate;
+    private java.sql.Date lastUpdatedDate;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -76,11 +76,11 @@ public class TimePoint {
     }
 
     @Column(name = "last_updated_date")
-    public Date getUpdatedDate() {
-        return updatedDate;
+    public Date getLastUpdatedDate() {
+        return lastUpdatedDate;
     }
 
-    public void setUpdatedDate(Date updatedDate) {
-        this.updatedDate = updatedDate;
+    public void setLastUpdatedDate(Date updatedDate) {
+        this.lastUpdatedDate = updatedDate;
     }
 }

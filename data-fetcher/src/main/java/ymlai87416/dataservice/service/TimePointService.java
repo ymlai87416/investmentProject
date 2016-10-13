@@ -14,9 +14,9 @@ import java.util.List;
 public interface TimePointService {
     List<TimePoint> getAllTimePoint(TimeSeries timeSeries);
 
-    List<TimePoint> getTimePointBySymbolAndDateRange(TimeSeries timeSeries, Date startDate, Date endDate);
+    List<TimePoint> getTimePointByTimeSeriesAndDateRange(TimeSeries timeSeries, Date startDate, Date endDate);
 
-    List<TimePoint> getTimePointBySymbolListAndDate(List<TimeSeries> timeSeriesList, Date date);
+    List<TimePoint> getTimePointByTimeSeriesListAndDate(List<TimeSeries> timeSeriesList, Date date);
 
     int deleteTimePoint(TimePoint timePoint);
 

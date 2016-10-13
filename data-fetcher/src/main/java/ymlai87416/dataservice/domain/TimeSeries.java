@@ -2,6 +2,7 @@ package ymlai87416.dataservice.domain;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.util.List;
 
 /**
  * Created by Tom on 12/10/2016.
@@ -15,6 +16,7 @@ public class TimeSeries {
     private String category;
     private java.sql.Date createdDate;
     private java.sql.Date lastUpdatedDate;
+    private List<TimePoint> timePointList;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,4 +74,14 @@ public class TimeSeries {
     public void setLastUpdatedDate(Date lastUpdatedDate) {
         this.lastUpdatedDate = lastUpdatedDate;
     }
+
+    @OneToMany(mappedBy="timeSeries", cascade=CascadeType.ALL)
+    public List<TimePoint> getTimePointList(){
+        return this.timePointList;
+    }
+
+    public void setTimePointList(List<TimePoint> timePointList){
+        this.timePointList = timePointList;
+    }
+
 }

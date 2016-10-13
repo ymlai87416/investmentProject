@@ -47,7 +47,7 @@ public class TimePointServiceImpl implements TimePointService {
 
     @Override
     @Transactional(readOnly=true)
-    public List<TimePoint> getTimePointBySymbolAndDateRange(TimeSeries timeSeries, Date startDate, Date endDate) {
+    public List<TimePoint> getTimePointByTimeSeriesAndDateRange(TimeSeries timeSeries, Date startDate, Date endDate) {
         TypedQuery<TimePoint> query = em.createQuery(
                 "select p from TimePoint p where p.timeSeries=:s and p.priceDate >= :startDate and p.priceDate <= :endDate" , TimePoint.class);
         query = query.setParameter("s", timeSeries);
@@ -59,7 +59,7 @@ public class TimePointServiceImpl implements TimePointService {
 
     @Override
     @Transactional(readOnly=true)
-    public List<TimePoint> getTimePointBySymbolListAndDate(List<TimeSeries> timeSeriesList, Date date) {
+    public List<TimePoint> getTimePointByTimeSeriesListAndDate(List<TimeSeries> timeSeriesList, Date date) {
         TypedQuery<TimePoint> query = em.createQuery(
                 "select p from TimePoint p where p.timeSeries IN :s and p.priceDate =:date" , TimePoint.class);
         query = query.setParameter("s", timeSeriesList);

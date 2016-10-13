@@ -14,7 +14,7 @@ public interface TimeSeriesService {
 
     List<TimeSeries> listAllTimeSeriesByCategory(String category);
 
-    List<TimeSeries> searchSymbol(TimeSeries timeSeries);
+    List<TimeSeries> searchTimeSeries(TimeSeries timeSeries);
 
     TimeSeries saveTimeSeries(TimeSeries timeSeries);
 
@@ -23,4 +23,5 @@ public interface TimeSeriesService {
     int deleteTimeSeries(TimeSeries timeSeries);
 
     int deleteAllTimeSeries();
+
 }

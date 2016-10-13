@@ -53,7 +53,7 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
     @Override
     @Transactional(readOnly=true)
-    public List<TimeSeries> searchSymbol(TimeSeries timeSeries) {
+    public List<TimeSeries> searchTimeSeries(TimeSeries timeSeries) {
         Predicate predicate;
         CriteriaBuilder cb = em.getCriteriaBuilder();
 

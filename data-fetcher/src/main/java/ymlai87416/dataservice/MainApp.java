@@ -10,6 +10,7 @@ import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.DataVendor;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
+import ymlai87416.dataservice.fetcher.HKExStockOptionIVFetcher;
 import ymlai87416.dataservice.fetcher.HKExStockOptionPriceFetcher;
 import ymlai87416.dataservice.fetcher.HKExStockSymbolFetcher;
 import ymlai87416.dataservice.fetcher.YahooHKStockPriceFetcher;
@@ -49,7 +50,8 @@ public class MainApp {
 
         //testHKExStockOptionPriceFetcher(ctx);
         //testHKExStockSymbolFetcher(ctx);
-        testYahooHKStockPriceFetcher(ctx);
+        //testYahooHKStockPriceFetcher(ctx);
+        testHKExStockOptionIVFetcher(ctx);
     }
 
     private void clearDatabase(ApplicationContext ctx) {
@@ -395,5 +397,11 @@ public class MainApp {
         YahooHKStockPriceFetcher yahooHKStockPriceFetcher = (YahooHKStockPriceFetcher)ctx.getBean("YahooHKStockPriceFetcher");
 
         yahooHKStockPriceFetcher.run();
+    }
+
+    public void testHKExStockOptionIVFetcher(ApplicationContext ctx){
+        HKExStockOptionIVFetcher hkExStockOptionIVFetcher = (HKExStockOptionIVFetcher)ctx.getBean("HKExStockOptionIVFetcher");
+
+        hkExStockOptionIVFetcher.run();
     }
 }

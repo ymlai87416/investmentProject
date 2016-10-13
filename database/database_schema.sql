@@ -81,7 +81,7 @@ CREATE TABLE time_point(
 	id bigint NOT NULL AUTO_INCREMENT,
 	version bigint NOT NULL,
 	series_id bigint NOT NULL,
-	time_point_date bigint NOT NULL,
+	time_point_date datetime NOT NULL,
 	`value` decimal(19,4) NULL,
 	created_date datetime NOT NULL,
 	last_updated_date datetime NOT NULL,
