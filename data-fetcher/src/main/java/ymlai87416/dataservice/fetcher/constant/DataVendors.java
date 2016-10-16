@@ -1,9 +1,7 @@
 package ymlai87416.dataservice.fetcher.constant;
 
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.DataVendor;
-
-import javax.rmi.CORBA.Util;
 
 /**
  * Created by Tom on 8/10/2016.

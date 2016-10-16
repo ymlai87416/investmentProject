@@ -2,13 +2,11 @@ package ymlai87416.dataservice.service.jpa;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.DailyPrice;
-import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.service.DailyPriceService;
 

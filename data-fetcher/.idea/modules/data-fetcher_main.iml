@@ -26,6 +26,7 @@
     <orderEntry type="library" name="Gradle: ch.qos.logback:logback-classic:1.1.7" level="project" />
     <orderEntry type="library" name="Gradle: ch.qos.logback:logback-core:1.1.7" level="project" />
     <orderEntry type="library" name="Gradle: com.opencsv:opencsv:3.8" level="project" />
+    <orderEntry type="library" name="Gradle: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-beans:4.3.3.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-core:4.3.3.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:org.springframework.aop:3.2.0.RELEASE" level="project" />

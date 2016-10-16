@@ -8,8 +8,7 @@ import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
-import yahoofinance.quotes.stock.StockQuote;
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.fetcher.constant.DataVendors;
@@ -60,7 +59,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
             searchCriteria.setInstrument(Instruments.STOCK);
             searchCriteria.setExchange(getOrSaveExchange(exchangeService, Exchanges.HKExchange));
 
-            List<Symbol> allSymbols = symbolService.searchSymbol(searchCriteria);
+            List<Symbol> allSymbols = symbolService.searchSymbol(searchCriteria, true);
             List<Symbol> redownloadDueToAdjustment = firstRoundDownloadDailyPrice(allSymbols);
 
             boolean allCompleted = false;

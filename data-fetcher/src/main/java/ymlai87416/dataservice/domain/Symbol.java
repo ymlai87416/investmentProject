@@ -2,6 +2,7 @@ package ymlai87416.dataservice.domain;
 
 import javax.persistence.*;
 import java.sql.Date;
+import java.util.List;
 
 /**
  * Created by Tom on 6/10/2016.
@@ -20,6 +21,7 @@ public class Symbol {
     private String currency;
     private Date createdDate;
     private Date lastUpdatedDate;
+    private List<DailyPrice> dailyPriceList;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -122,5 +124,14 @@ public class Symbol {
 
     public void setLastUpdatedDate(Date lastUpdatedDate) {
         this.lastUpdatedDate = lastUpdatedDate;
+    }
+
+    @OneToMany(mappedBy="symbol", cascade=CascadeType.ALL)
+    public List<DailyPrice> getDailyPriceList() {
+        return dailyPriceList;
+    }
+
+    public void setDailyPriceList(List<DailyPrice> dailyPriceList) {
+        this.dailyPriceList = dailyPriceList;
     }
 }

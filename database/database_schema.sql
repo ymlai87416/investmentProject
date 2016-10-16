@@ -62,6 +62,8 @@ CREATE TABLE daily_price (
 	close_price decimal(19,4) NULL,
 	adj_close_price decimal(19,4) NULL,
 	volume bigint NULL,
+	iv decimal(19,4) NULL,
+	open_interest bigint NULL,
 	PRIMARY KEY (id),
 	KEY index_data_vendor_id (data_vendor_id),
 	KEY index_symbol_id (symbol_id)

@@ -13,7 +13,7 @@ public interface SymbolService {
 
     List<Symbol> listAllSymbolByExchange(Exchange exchange);
 
-    List<Symbol> searchSymbol(Symbol symbol);
+    List<Symbol> searchSymbol(Symbol symbol, boolean initChild);
 
     Symbol saveSymbol(Symbol symbol);
 

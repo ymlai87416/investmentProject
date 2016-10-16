@@ -4,8 +4,12 @@ import com.opencsv.CSVReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.support.PagedListHolder;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
+import sun.security.pkcs.ParsingException;
+import ymlai87416.dataservice.reader.HKExStockOptionReportCSVReader;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.DataVendor;
 import ymlai87416.dataservice.domain.Exchange;
@@ -18,8 +22,9 @@ import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -30,8 +35,10 @@ import java.util.zip.ZipInputStream;
 public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
     private Logger log = LoggerFactory.getLogger(HKExStockOptionHistoryPriceFetcher.class);
-    String urlFormaturlFormat = "http://www.hkex.com.hk/eng/stat/dmstat/dayrpt/dqe%02d%02d%02d.zip";
-    String zipFileNameFormat="dqe%02d%02d%02d.zip";
+    private static String urlFormaturlFormat = "http://www.hkex.com.hk/eng/stat/dmstat/dayrpt/dqe%s.zip";
+    private static String zipFileNameFormat="dqe%s.zip";
+
+    private static SimpleDateFormat linkDateFormat = new SimpleDateFormat("yyMMdd");
 
     @Autowired
     ExchangeService exchangeService;
@@ -52,23 +59,18 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
     public boolean run() {
         File file = initMasterBackup();
 
-        Exchange exchange = getOrSaveExchange(exchangeService, Exchanges.HKExchange);
-        DataVendor dataVendor = getOrSaveDataVendor(dataVendorService, DataVendors.HKExDataVendor);
-
-        if(checkDownloadCompleteMark(file)){
+        if(!checkDownloadCompleteMark(file)){
             downloadZipFilesToFolder(file);
             createDownloadCompleteMark(file);
         }
 
-        if(checkUnzipCompleteMark(file)){
-            unzipFolderToCSV(file);
-            createUnzipCompleteMark(file);
-        }
+        unzipFolderToCSV(file);
 
-        if(checkReadCompleteMark(file)){
-            readCSV(file);
-            createReadCompleteMark(file);
-        }
+        List<Pair<Symbol, DailyPrice>> resultList = readCSV(file);
+
+        List<Symbol> symbolList = groupResultList(resultList);
+
+        saveSymbolPricePairToDB(symbolList);
 
         return true;
     }
@@ -80,8 +82,9 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
         for(long time=startDate.getTime(); time < endDate.getTime(); time+=24*60*60*1000) {
             try {
                 Date ctime = new Date(time);
-                String url = String.format(urlFormaturlFormat, ctime.getYear()+1900, ctime.getMonth()+1, ctime.getDay());
-                String zip = String.format(zipFileNameFormat, ctime.getYear()+1900, ctime.getMonth()+1, ctime.getDay());
+                String dateStr = linkDateFormat.format(ctime);
+                String url = String.format(urlFormaturlFormat, dateStr);
+                String zip = String.format(zipFileNameFormat, dateStr);
                 URL website = new URL(url);
                 ReadableByteChannel rbc = Channels.newChannel(website.openStream());
 
@@ -103,7 +106,7 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
                     //get the zip file content
                     ZipInputStream zis =
-                            new ZipInputStream(new FileInputStream(fileList[i]));
+                            new ZipInputStream(new FileInputStream(masterDir.getAbsolutePath() + File.separator + fileList[i]));
                     //get the zipped file list entry
                     ZipEntry ze = zis.getNextEntry();
 
@@ -111,6 +114,9 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
                         String fileName = ze.getName();
                         File newFile = new File(masterDir + File.separator + fileName);
+
+                        if(newFile.exists())
+                            newFile.delete();
 
                         System.out.println("file unzip : "+ newFile.getAbsoluteFile());
 
@@ -135,36 +141,133 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
                 catch(Exception ex){
                     ex.printStackTrace();
                 }
-
-
             }
         }
     }
 
-    private void readCSV(File masterDir){
+    private List<Pair<Symbol, DailyPrice>> readCSV(File masterDir){
         String[] fileList = masterDir.list();
+
+        Exchange exchange = getOrSaveExchange(exchangeService, Exchanges.HKExchange);
+        DataVendor dataVendor = getOrSaveDataVendor(dataVendorService, DataVendors.HKExDataVendor);
+        HKExStockOptionReportCSVReader csvReader = new HKExStockOptionReportCSVReader(exchange, dataVendor);
+
+        List<Pair<Symbol, DailyPrice>> result =new ArrayList<>();
 
         for(int i=0; i<fileList.length; ++i){
             if(fileList[i].endsWith(".csv")){
 
-                String csvFile = fileList[i];
+                String csvFileName = fileList[i];
 
-                CSVReader reader = null;
+                String priceDateStr = csvFileName.toUpperCase().replace("DQE", "").replace(".CSV", "").trim();
+                java.util.Date priceDate;
                 try {
-                    reader = new CSVReader(new FileReader(csvFile));
-                    String[] line;
-                    while ((line = reader.readNext()) != null) {
+                    priceDate = linkDateFormat.parse(priceDateStr);
+                }
+                catch(Exception ex){
+                    ex.printStackTrace();
+                    continue;
+                }
 
+                String csvFilePath = masterDir.getAbsolutePath() + File.separator + csvFileName;
 
+                try {
+                    File csvFile = new File(csvFilePath);
+                    List<Pair<Symbol, DailyPrice>> intermediate = csvReader.readStockOptionReportCSV(csvFile.getAbsolutePath(), priceDate);
 
-                    }
+                    result.addAll(intermediate);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-
             }
         }
+
+        return result;
+    }
+
+    private void saveSymbolPricePairToDB(List<Symbol> symbolList){
+        for(Symbol symbol : symbolList){
+
+            List<Symbol> symbolDBSearchResult = symbolService.searchSymbol(symbol, true);
+
+            if(symbolDBSearchResult == null || symbolDBSearchResult.size() == 0){
+                symbolService.saveSymbol(symbol);
+            }
+            else{
+                if(symbolDBSearchResult.size() > 1){
+                    List<String> foundSymbolId= symbolDBSearchResult.stream().map(x -> x.getId().toString()).collect(Collectors.toList());
+                    String symbolIdList = String.join(",", foundSymbolId);
+                    log.error(String.format("One ore more symbol found when searching symbol. symbol id are: ", symbolIdList));
+                    continue;
+                }
+
+                Symbol symbolDB = symbolDBSearchResult.get(0);
+                List<DailyPrice> existingDailyPrice = symbolDB.getDailyPriceList();
+                if(existingDailyPrice == null){
+                    for(DailyPrice dailyPrice : symbol.getDailyPriceList()) {
+                        dailyPrice.setSymbol(symbolDB);
+                        dailyPriceService.saveDailyPrice(dailyPrice);
+                    }
+                }
+                else{
+                    List<DailyPrice> dailyPriceList = symbol.getDailyPriceList();
+
+                    for(DailyPrice dailyPrice : dailyPriceList){
+                        boolean insert = true;
+                        for(DailyPrice dp : symbolDB.getDailyPriceList()){
+                            if(dp.getPriceDate().compareTo(dailyPrice.getPriceDate()) == 0){
+                                insert=false;
+                                dp.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
+                                dp.setOpenPrice(dailyPrice.getOpenPrice());
+                                dp.setHighPrice(dailyPrice.getHighPrice());
+                                dp.setLowPrice(dailyPrice.getLowPrice());
+                                dp.setClosePrice(dailyPrice.getClosePrice());
+                                dp.setAdjClosePrice(dailyPrice.getAdjClosePrice());
+                                dp.setVolume(dailyPrice.getVolume());
+                                dp.setIv(dailyPrice.getIv());
+                                dp.setOpenInterest(dailyPrice.getOpenInterest());
+
+                                //save and break;
+                                dailyPriceService.saveDailyPrice(dp);
+                                break;
+                            }
+                        }
+
+                        if(insert == true){
+                            dailyPrice.setSymbol(symbolDB);
+                            dailyPriceService.saveDailyPrice(dailyPrice);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private List<Symbol> groupResultList(List<Pair<Symbol, DailyPrice>> resultList){
+        List<Symbol> returnVal;
+
+        Map<String, Symbol> symbolMap = new HashMap<String, Symbol>();
+
+        for(Pair<Symbol, DailyPrice> result : resultList){
+            Symbol symbol = result.getFirst();
+            DailyPrice price = result.getSecond();
+            if(symbolMap.get(symbol.getTicker()) == null){
+                symbolMap.put(symbol.getTicker(), result.getFirst());
+            }
+
+            Symbol symbolDict = symbolMap.get(symbol.getTicker());
+
+            if(symbolDict.getDailyPriceList() == null)
+                symbolDict.setDailyPriceList(new ArrayList<DailyPrice>());
+
+            symbolDict.getDailyPriceList().add(price);
+            price.setSymbol(symbolDict);
+        }
+
+        returnVal = new ArrayList<>(symbolMap.values());
+
+        return returnVal;
     }
 
     private File initMasterBackup(){
@@ -210,62 +313,5 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
         catch(Exception ex){
             ex.printStackTrace();
         }
-    }
-
-    private boolean checkUnzipCompleteMark(File file){
-        try {
-            String completeMarkPath = file.getAbsolutePath() + File.separator + ".unzip.complete";
-            File completeMark = new File(completeMarkPath);
-
-            return completeMark.exists();
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
-    private void createUnzipCompleteMark(File file){
-        try {
-            String completeMarkPath = file.getAbsolutePath() + File.separator + ".unzip.complete";
-            File completeMark = new File(completeMarkPath);
-
-            completeMark.createNewFile();
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-        }
-    }
-
-    private boolean checkReadCompleteMark(File file){
-        try {
-            String completeMarkPath = file.getAbsolutePath() + File.separator + ".read.complete";
-            File completeMark = new File(completeMarkPath);
-
-            return completeMark.exists();
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-            return false;
-        }
-    }
-
-    private void createReadCompleteMark(File file){
-        try {
-            String completeMarkPath = file.getAbsolutePath() + File.separator + ".read.complete";
-            File completeMark = new File(completeMarkPath);
-
-            completeMark.createNewFile();
-        }
-        catch(Exception ex){
-            ex.printStackTrace();
-        }
-    }
-
-    private class ResultPair{
-
-
-        Symbol symbol;
-        DailyPrice dailyPrice;
     }
 }

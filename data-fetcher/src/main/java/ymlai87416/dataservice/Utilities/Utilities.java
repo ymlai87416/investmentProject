@@ -1,4 +1,4 @@
-package ymlai87416.dataservice.Utilities;
+package ymlai87416.dataservice.utilities;
 
 import ymlai87416.dataservice.fetcher.constant.FileEncoding;
 

@@ -1,6 +1,6 @@
 package ymlai87416.dataservice.fetcher.constant;
 
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.Exchange;
 
 /**

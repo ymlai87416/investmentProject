@@ -7,8 +7,10 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.reader.HKExStockSymbolWebPageParser;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.exception.ParseException;
@@ -35,8 +37,8 @@ public class HKExStockSymbolFetcher implements Fetcher{
 
     private Logger log = LoggerFactory.getLogger(HKExStockSymbolFetcher.class);
 
-    final String url = "http://www.hkex.com.hk/eng/market/sec_tradinfo/stockcode/eisdeqty.htm";
-    final String instrumentType = Instruments.STOCK;
+    //final String url = "http://www.hkex.com.hk/eng/market/sec_tradinfo/stockcode/eisdeqty.htm";
+    //final String instrumentType = Instruments.STOCK;
     final String cacheFileName = ".cache";
 
     @Autowired
@@ -52,14 +54,36 @@ public class HKExStockSymbolFetcher implements Fetcher{
     public synchronized boolean run(){
         try{
             File masterDir = initMasterBackup();
-            boolean iscached = checkCompleteMark(masterDir);
 
-            List<Symbol> symbols = parseFrontPage(masterDir, iscached, false);
+            HKExStockSymbolWebPageParser parser = new HKExStockSymbolWebPageParser(getOrSaveExchange(exchangeService, Exchanges.HKExchange));
 
-            if(!iscached)
+            File frontPageLocalCache = createLocalCacheForWebPage(masterDir, HKExStockSymbolWebPageParser.url, "main");
+
+            List<Pair<Symbol, String>> symbolInfoList = parser.parseFrontPage(frontPageLocalCache.getAbsolutePath());
+
+            List<Symbol> existingSymbol = symbolService.listAllSymbolByExchange(Exchanges.HKExchange);
+
+            List<String> existingTicker = existingSymbol.stream().map(x -> x.getTicker()).collect(Collectors.toList());
+
+            for(Pair<Symbol, String> symbolInfo : symbolInfoList){
+                if(existingTicker.contains(symbolInfo.getFirst().getTicker()))
+                    symbolInfoList.remove(symbolInfo);
+            }
+
+            for(Pair<Symbol, String> symbolInfo : symbolInfoList){
+                File pageCache = createLocalCacheForWebPage(masterDir, symbolInfo.getSecond(), symbolInfo.getFirst().getTicker());
+
+                Symbol symbol = symbolInfo.getFirst();
+                String url = symbolInfo.getSecond();
+                Symbol updatedSymbol = parser.parseIndividualPage(symbol, url, pageCache.getAbsolutePath());
+
+                existingSymbol.add(updatedSymbol);
+            }
+
+            if(!checkCompleteMark(masterDir))
                 createCompleteMark(masterDir);
 
-            for(Symbol symbol : symbols)
+            for(Symbol symbol : existingSymbol)
                 symbolService.saveSymbol(symbol);
         }
         catch(IOException ex){
@@ -74,7 +98,8 @@ public class HKExStockSymbolFetcher implements Fetcher{
         return true;
     }
 
-    private List<Symbol> parseFrontPage(File masterDir, boolean isCached, boolean checkForUpdate) throws IOException, ParseException{
+    private File createLocalCacheForWebPage(File masterDir, String url, String cacheFileName) throws IOException{
+        boolean isCached = checkCompleteMark(masterDir);
         TreeMap<String, String> urlToFileMapping = new TreeMap<String, String>();
         if(isCached){
             String cacheFilePath = masterDir.getAbsolutePath() + File.separator + cacheFileName;
@@ -91,150 +116,23 @@ public class HKExStockSymbolFetcher implements Fetcher{
             }
             catch(Exception ex){
                 urlToFileMapping.clear();
+                File cacheFile = new File(cacheFilePath);
+                cacheFile.delete();
             }
         }
 
-        String cacheFilePath;
+        String cacheFilePath = urlToFileMapping.get(url);
 
-        cacheFilePath = urlToFileMapping.get(url);
-        Document doc;
         if(cacheFilePath == null){
-            String destination = masterDir.getAbsolutePath() + File.separator + "main";
+            String destination = masterDir.getAbsolutePath() + File.separator + cacheFileName;
             downloadFileToMasterBackup(masterDir, url, destination);
-            File input = new File(destination);
-            doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
+            cacheFilePath = destination;
         }
         else{
-            File input = new File(cacheFilePath);
-            doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
+            cacheFilePath = masterDir.getAbsolutePath() + File.separator + cacheFilePath;
         }
 
-        Element stockTable = doc.select("table.table_grey_border").first();
-        Elements records = stockTable.select("tr.tr_normal");
-
-        ArrayList<SymbolInfo> symbolInfoList = new ArrayList<SymbolInfo>();
-
-        for(Element record : records){
-            String url;
-            Elements cell = record.select("td");
-
-            //TODO: remove line after debug
-            if(cell.size() == 2)
-                System.out.println("I am here.");
-
-            url = cell.get(1).child(0).attr("abs:href");
-
-            int lot;
-            String lotStr = cell.get(2).text().replace(",", "");
-            try{
-                lot = Integer.parseInt(lotStr);
-            }
-            catch(Exception ex){
-                lot = 1;
-            }
-
-            Exchange exchange = getOrSaveExchange(exchangeService, Exchanges.HKExchange);
-
-            Symbol symbol = new Symbol();
-            symbol.setExchange(exchange);
-            symbol.setTicker(convertStockNumberToTicker(cell.get(0).text()));
-            symbol.setInstrument(Instruments.STOCK);
-            symbol.setName(cell.get(1).text());
-            symbol.setLot(lot);
-
-            SymbolInfo info = new SymbolInfo(symbol, url);
-
-            symbolInfoList.add(info);
-        }
-
-        //if check for update, only deep down
-        if(checkForUpdate){
-            List<Symbol> existingSymbol = symbolService.listAllSymbolByExchange(Exchanges.HKExchange);
-
-            for(SymbolInfo symbolInfo : symbolInfoList){
-                if(existingSymbol.contains(symbolInfo))
-                    symbolInfoList.remove(symbolInfo);
-            }
-        }
-
-        //for each stock, download
-        ArrayList<Symbol> resultList = new ArrayList<Symbol>();
-        for(SymbolInfo symbolInfo : symbolInfoList){
-            parseIndividualPage(symbolInfo.infoUrl, symbolInfo.symbol, masterDir, urlToFileMapping);
-            resultList.add(symbolInfo.symbol);
-        }
-
-        return resultList;
-    }
-
-    private String convertStockNumberToTicker(String stockNumber){
-        return stockNumber+".HK";
-    }
-
-    private Symbol parseIndividualPage(String url, Symbol symbol, File masterDir, TreeMap<String, String> urlToFileMapping) throws IOException, ParseException {
-        Document doc;
-        if(urlToFileMapping != null){
-            String cacheFIlePath = urlToFileMapping.get(url);
-            if(cacheFIlePath == null){
-                //download file
-                String destination = masterDir.getAbsolutePath() + File.separator + symbol.getTicker();
-                downloadFileToMasterBackup(masterDir, url, destination);
-                File input = new File(destination);
-                doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
-            }
-            else{
-                //use cache
-                File input = new File(cacheFIlePath);
-                doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
-            }
-        }
-        else{
-            //download file
-            String destination = masterDir.getAbsolutePath() + File.separator + symbol.getTicker();
-            downloadFileToMasterBackup(masterDir, url, destination);
-            File input = new File(destination);
-            doc = Jsoup.parse(input, FileEncoding.defaultFileEncoding, url);
-        }
-
-        Elements tables = doc.select("table:contains(Company/Securities Name:)");
-
-        if(tables == null || tables.size() == 0)
-            throw new ParseException();
-
-        Element smallestTable = tables.get(0);
-        int minTableContentLen = tables.get(0).text().length();
-
-        for(Element table : tables){
-            if(table.text().length() < minTableContentLen) {
-                smallestTable = table;
-                minTableContentLen = table.text().length();
-            }
-        }
-
-        Elements cells = smallestTable.select("td");
-
-        symbol.setCurrency(cells.get(20).text().trim());
-        symbol.setInstrument(instrumentType);
-        symbol.setSector(cells.get(14).text().trim());
-        symbol.setCreatedDate(Utilities.getCurrentSQLDateTime());
-        symbol.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
-
-        return symbol;
-    }
-
-
-    class SymbolInfo{
-        Symbol symbol;
-        String infoUrl;
-
-        public SymbolInfo(Symbol symbol, String infoUrl){
-            this.symbol = symbol;
-            this.infoUrl = infoUrl;
-        }
-    }
-
-    public static void main(String[] args){
-
+        return new File(cacheFilePath);
     }
 
     private File initMasterBackup(){

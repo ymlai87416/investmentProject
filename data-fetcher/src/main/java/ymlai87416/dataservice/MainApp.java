@@ -5,13 +5,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.util.Assert;
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.fetcher.HKExStockOptionHistoryPriceFetcher;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.DailyPrice;
 import ymlai87416.dataservice.domain.DataVendor;
 import ymlai87416.dataservice.domain.Exchange;
 import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.fetcher.HKExStockOptionIVFetcher;
-import ymlai87416.dataservice.fetcher.HKExStockOptionPriceFetcher;
 import ymlai87416.dataservice.fetcher.HKExStockSymbolFetcher;
 import ymlai87416.dataservice.fetcher.YahooHKStockPriceFetcher;
 import ymlai87416.dataservice.fetcher.constant.DataVendors;
@@ -51,7 +51,8 @@ public class MainApp {
         //testHKExStockOptionPriceFetcher(ctx);
         //testHKExStockSymbolFetcher(ctx);
         //testYahooHKStockPriceFetcher(ctx);
-        testHKExStockOptionIVFetcher(ctx);
+        //testHKExStockOptionIVFetcher(ctx);
+        testHKExStockOptionHistoryPriceFetcher(ctx);
     }
 
     private void clearDatabase(ApplicationContext ctx) {
@@ -132,7 +133,7 @@ public class MainApp {
 
         List<Symbol> symbolSearchResult = symbolService.searchSymbol(new Symbol(){{
             setTicker(symbol3.getTicker());
-        }});
+        }}, true);
 
         Assert.isTrue(symbolSearchResult != null && symbolSearchResult.size() == 1);
 
@@ -381,11 +382,11 @@ public class MainApp {
     }
 
 
-    public void testHKExStockOptionPriceFetcher(ApplicationContext ctx){
+    /*public void testHKExStockOptionPriceFetcher(ApplicationContext ctx){
         HKExStockOptionPriceFetcher hKExStockOptionPriceFetcher = (HKExStockOptionPriceFetcher)ctx.getBean("HKExStockOptionPriceFetcher");
 
         hKExStockOptionPriceFetcher.run();
-    }
+    }*/
 
     public void testHKExStockSymbolFetcher(ApplicationContext ctx){
         HKExStockSymbolFetcher hKExStockSymbolFetcher = (HKExStockSymbolFetcher)ctx.getBean("HKExStockSymbolFetcher");
@@ -403,5 +404,11 @@ public class MainApp {
         HKExStockOptionIVFetcher hkExStockOptionIVFetcher = (HKExStockOptionIVFetcher)ctx.getBean("HKExStockOptionIVFetcher");
 
         hkExStockOptionIVFetcher.run();
+    }
+
+    public void testHKExStockOptionHistoryPriceFetcher(ApplicationContext ctx){
+        HKExStockOptionHistoryPriceFetcher fetcher = (HKExStockOptionHistoryPriceFetcher)ctx.getBean("HKExStockOptionHistoryPriceFetcher");
+
+        fetcher.run();
     }
 }

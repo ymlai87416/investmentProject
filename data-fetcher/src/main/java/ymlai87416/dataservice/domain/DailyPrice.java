@@ -22,6 +22,8 @@ public class DailyPrice {
     private Double closePrice;
     private Double adjClosePrice;
     private Long volume;
+    private Double iv;
+    private Long openInterest;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -143,5 +145,23 @@ public class DailyPrice {
 
     public void setVolume(Long volume) {
         this.volume = volume;
+    }
+
+    @Column(name = "iv")
+    public Double getIv() {
+        return iv;
+    }
+
+    public void setIv(Double volume) {
+        this.iv = volume;
+    }
+
+    @Column(name = "open_interest")
+    public Long getOpenInterest() {
+        return openInterest;
+    }
+
+    public void setOpenInterest(Long openInterest) {
+        this.openInterest = openInterest;
     }
 }

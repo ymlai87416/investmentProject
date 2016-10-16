@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import ymlai87416.dataservice.Utilities.Utilities;
+import ymlai87416.dataservice.reader.HKExStockOptionIVCSVReader;
+import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.TimePoint;
 import ymlai87416.dataservice.domain.TimeSeries;
 import ymlai87416.dataservice.fetcher.constant.FileEncoding;
@@ -18,7 +19,6 @@ import ymlai87416.dataservice.service.MasterBackup;
 import ymlai87416.dataservice.service.TimePointService;
 import ymlai87416.dataservice.service.TimeSeriesService;
 
-import javax.rmi.CORBA.Util;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -32,8 +32,7 @@ public class HKExStockOptionIVFetcher implements Fetcher {
     private static String fileDownloadUrlFormat = "http://www.hkex.com.hk/eng/sorc/options/statistics_hv_iv.aspx?action=csv&type=3&ucode=%s";
     private static String fileName = "index.html";
     private static String urlEncoding = "UTF-8";
-    private static String category = "HK Stock Option volatility";
-    private static SimpleDateFormat csvDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
 
     private Logger log = LoggerFactory.getLogger(HKExStockOptionIVFetcher.class);
 
@@ -68,73 +67,18 @@ public class HKExStockOptionIVFetcher implements Fetcher {
 
             File[] fileList = masterDir.listFiles();
 
+            List<TimeSeries> allTimeSeries = new ArrayList<TimeSeries>();
+
+            HKExStockOptionIVCSVReader reader = new HKExStockOptionIVCSVReader();
+
             for(File file : fileList){
                 if(file.getName().endsWith(".csv")){
-                    List<TimeSeries> volatilitySeriesList = getVolatilityTimeSeriesFromFile(file.getAbsolutePath());
-
-                    for(TimeSeries timeSeries : volatilitySeriesList){
-                        List<TimeSeries> timeSeriesInDBSearchResult = timeSeriesService.searchTimeSeries(timeSeries);
-
-                        if(timeSeriesInDBSearchResult == null || timeSeriesInDBSearchResult.size() == 0){
-                            timeSeriesService.saveTimeSeries(timeSeries);
-                        }
-                        else{
-                            Assert.isTrue(timeSeriesInDBSearchResult.size() == 1); //only 1 series in DB
-                            TimeSeries timeSeriesInDB = timeSeriesInDBSearchResult.get(0);
-
-                            Comparator<TimePoint> timePointComparator = new Comparator<TimePoint>(){
-                                @Override
-                                public int compare(TimePoint o1, TimePoint o2) {
-                                    return o1.getTimePointDate().compareTo(o2.getTimePointDate());
-                                }
-                            };
-
-                            List<TimePoint> timePointList = timeSeries.getTimePointList();
-                            Collections.sort(timePointList,timePointComparator);
-
-                            java.sql.Date startDate = timePointList.get(0).getTimePointDate();
-                            java.sql.Date endDate = timePointList.get(timePointList.size()-1).getTimePointDate();
-
-                            List<TimePoint> timePointsInDB = timePointService.getTimePointByTimeSeriesAndDateRange(timeSeriesInDB, startDate, endDate);
-
-                            Collections.sort(timePointsInDB, timePointComparator );
-
-                            int indexDB = 0; int indexWeb;
-
-                            for(indexWeb = 0; indexWeb < timePointList.size(); ++indexWeb){
-                                for(; indexDB < timePointsInDB.size(); ++indexDB){
-                                    if(timePointList.get(indexWeb).getTimePointDate().compareTo(
-                                            timePointsInDB.get(indexDB).getTimePointDate()
-                                    ) >= 0)
-                                        break;
-                                }
-
-                                if(indexDB > timePointsInDB.size()){
-                                    timeSeriesInDB.getTimePointList().add(timePointList.get(indexWeb));
-                                    timePointList.get(indexWeb).setTimeSeries(timeSeriesInDB);
-                                }
-                                else{
-                                    if(timePointsInDB.get(indexDB).getTimePointDate().compareTo(
-                                            timePointList.get(indexWeb).getTimePointDate()
-                                    ) == 0){
-                                        //update the database record
-                                        TimePoint timePointInDB = timePointsInDB.get(indexDB);
-                                        TimePoint timePointFromWeb = timePointList.get(indexWeb);
-
-                                        if(timePointInDB.getValue() != timePointFromWeb.getValue()){
-                                            timePointInDB.setValue(timePointFromWeb.getValue());
-                                            timePointInDB.setLastUpdatedDate(Utilities.getCurrentSQLDate());
-                                        }
-                                    }
-                                }
-                            }
-
-                            timeSeriesService.saveTimeSeries(timeSeriesInDB);
-                        }
-
-                    }
+                    List<TimeSeries> intermediate = reader.getVolatilityTimeSeriesFromFile(file.getAbsolutePath());
+                    allTimeSeries.addAll(intermediate);
                 }
             }
+
+            saveIvTimeSeriesToDatabase(allTimeSeries);
 
         }
         catch(Exception ex){
@@ -142,6 +86,70 @@ public class HKExStockOptionIVFetcher implements Fetcher {
         }
 
         return false;
+    }
+
+    private void saveIvTimeSeriesToDatabase(List<TimeSeries> volatilitySeriesList){
+        for(TimeSeries timeSeries : volatilitySeriesList){
+            List<TimeSeries> timeSeriesInDBSearchResult = timeSeriesService.searchTimeSeries(timeSeries);
+
+            if(timeSeriesInDBSearchResult == null || timeSeriesInDBSearchResult.size() == 0){
+                timeSeriesService.saveTimeSeries(timeSeries);
+            }
+            else{
+                Assert.isTrue(timeSeriesInDBSearchResult.size() == 1); //only 1 series in DB
+                TimeSeries timeSeriesInDB = timeSeriesInDBSearchResult.get(0);
+
+                Comparator<TimePoint> timePointComparator = new Comparator<TimePoint>(){
+                    @Override
+                    public int compare(TimePoint o1, TimePoint o2) {
+                        return o1.getTimePointDate().compareTo(o2.getTimePointDate());
+                    }
+                };
+
+                List<TimePoint> timePointList = timeSeries.getTimePointList();
+                Collections.sort(timePointList,timePointComparator);
+
+                java.sql.Date startDate = timePointList.get(0).getTimePointDate();
+                java.sql.Date endDate = timePointList.get(timePointList.size()-1).getTimePointDate();
+
+                List<TimePoint> timePointsInDB = timePointService.getTimePointByTimeSeriesAndDateRange(timeSeriesInDB, startDate, endDate);
+
+                Collections.sort(timePointsInDB, timePointComparator );
+
+                int indexDB = 0; int indexWeb;
+
+                for(indexWeb = 0; indexWeb < timePointList.size(); ++indexWeb){
+                    for(; indexDB < timePointsInDB.size(); ++indexDB){
+                        if(timePointList.get(indexWeb).getTimePointDate().compareTo(
+                                timePointsInDB.get(indexDB).getTimePointDate()
+                        ) >= 0)
+                            break;
+                    }
+
+                    if(indexDB > timePointsInDB.size()){
+                        timeSeriesInDB.getTimePointList().add(timePointList.get(indexWeb));
+                        timePointList.get(indexWeb).setTimeSeries(timeSeriesInDB);
+                    }
+                    else{
+                        if(timePointsInDB.get(indexDB).getTimePointDate().compareTo(
+                                timePointList.get(indexWeb).getTimePointDate()
+                        ) == 0){
+                            //update the database record
+                            TimePoint timePointInDB = timePointsInDB.get(indexDB);
+                            TimePoint timePointFromWeb = timePointList.get(indexWeb);
+
+                            if(timePointInDB.getValue() != timePointFromWeb.getValue()){
+                                timePointInDB.setValue(timePointFromWeb.getValue());
+                                timePointInDB.setLastUpdatedDate(Utilities.getCurrentSQLDate());
+                            }
+                        }
+                    }
+                }
+
+                timeSeriesService.saveTimeSeries(timeSeriesInDB);
+            }
+
+        }
     }
 
     private Map<String, String> fetchStockOptionIVCode(Document doc){
@@ -174,76 +182,6 @@ public class HKExStockOptionIVFetcher implements Fetcher {
         }
 
         return destination;
-    }
-
-    private List<TimeSeries> getVolatilityTimeSeriesFromFile(String file){
-        List<TimeSeries> timeSeriesList = new ArrayList<TimeSeries>();
-
-        CSVReader reader = null;
-        try {
-            reader = new CSVReader(new FileReader(file));
-            String[] line;
-
-            line = reader.readNext();
-            String assetName = line[1];
-
-            line = reader.readNext();
-
-            line = reader.readNext();
-
-            Assert.isTrue(line.length > 1);
-
-            for(int i=1 ; i<line.length; ++i){
-                TimeSeries timeSeries = new TimeSeries();
-
-                String seriesName = assetName + " " + line[i];
-                timeSeries.setSeriesName(seriesName);
-                timeSeries.setCategory(category);
-                timeSeries.setCreatedDate(Utilities.getCurrentSQLDate());
-                timeSeries.setLastUpdatedDate(Utilities.getCurrentSQLDate());
-
-                timeSeriesList.add(timeSeries);
-            }
-
-            while ((line = reader.readNext()) != null) {
-                try {
-                    java.util.Date timePointDate = csvDateFormat.parse(line[0]);
-                    java.sql.Date timePointSqlDate = Utilities.convertUtilDateToSqlDate(timePointDate);
-
-                    for(int i=1; i<line.length; ++i){
-                        try{
-                            Double timePointValue = Double.parseDouble(line[i]);
-                            TimePoint timePoint = new TimePoint();
-
-                            TimeSeries timeSeries = timeSeriesList.get(i-1);
-
-                            timePoint.setTimeSeries(timeSeries);
-                            timePoint.setTimePointDate(timePointSqlDate);
-                            timePoint.setValue(timePointValue);
-                            timePoint.setCreatedDate(Utilities.getCurrentSQLDate());
-                            timePoint.setLastUpdatedDate(Utilities.getCurrentSQLDate());
-
-                            if(timeSeries.getTimePointList() == null){
-                                timeSeries.setTimePointList(new ArrayList<>());
-                            }
-                            timeSeries.getTimePointList().add(timePoint);
-                        }
-                        catch(Exception ex){
-                            ex.printStackTrace();
-                            log.error(String.format("Error when parsing the number: %s. Skipping this time point.", line[i]), ex);
-                        }
-                    }
-                }
-                catch(Exception ex) {
-                    ex.printStackTrace();
-                    log.error(String.format("Error when parsing the following date: %s. Continue with next line.", line[0]), ex);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return timeSeriesList;
     }
 
     private boolean checkCompleteMark(File file){
