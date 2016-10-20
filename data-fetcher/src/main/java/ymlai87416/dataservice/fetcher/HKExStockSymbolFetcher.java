@@ -24,6 +24,7 @@ import ymlai87416.dataservice.service.SymbolService;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public class HKExStockSymbolFetcher implements Fetcher{
     MasterBackup masterBackup;
 
     @Override
-    public synchronized boolean run(){
+    public synchronized boolean run(Map<String, Object> parameter){
         try{
             File masterDir = initMasterBackup();
 

@@ -31,15 +31,52 @@ public class MainApp {
 
     private Logger log = LoggerFactory.getLogger(MainApp.class);
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         MainApp instance = new MainApp();
-        instance.run();
+        instance.run(args);
     }
 
-    public void run(){
+    public void run(String[] args){
+        if(args.length==0){
+            System.out.println("Download stock quote to database");
+            System.out.println("");
+            System.out.println("java -jar dataservice.jar [-st] [-op] [-sy] [-iv]");
+            System.out.println("");
+            System.out.println("-st\t\t\tDownload stock quote from Yahoo finance" );
+            System.out.println("-op\t\t\tDownload option quote from HK exchange" );
+            System.out.println("-sy\t\t\tDownload all ticker symbol from HK exchange" );
+            System.out.println("-iv\t\t\tDownload stock option iv from HK exchange" );
+
+            return;
+        }
+
+
         GenericXmlApplicationContext ctx = new GenericXmlApplicationContext();
         ctx.load("classpath:spring-conf.xml");
         ctx.refresh();
+
+        for(String arg : args){
+            if(arg.trim().compareTo("-st") == 0){
+                YahooHKStockPriceFetcher yahooHKStockPriceFetcher = (YahooHKStockPriceFetcher)ctx.getBean("YahooHKStockPriceFetcher");
+
+                yahooHKStockPriceFetcher.run(null);
+            }
+            else if(arg.trim().compareTo("-op") == 0){
+                HKExStockOptionHistoryPriceFetcher fetcher = (HKExStockOptionHistoryPriceFetcher)ctx.getBean("HKExStockOptionHistoryPriceFetcher");
+
+                fetcher.run(null);
+            }
+            else if(arg.trim().compareTo("-sy") == 0){
+                HKExStockSymbolFetcher hKExStockSymbolFetcher = (HKExStockSymbolFetcher)ctx.getBean("HKExStockSymbolFetcher");
+
+                hKExStockSymbolFetcher.run(null);
+            }
+            else if(arg.trim().compareTo("-iv") == 0){
+                HKExStockOptionIVFetcher hkExStockOptionIVFetcher = (HKExStockOptionIVFetcher)ctx.getBean("HKExStockOptionIVFetcher");
+
+                hkExStockOptionIVFetcher.run(null);
+            }
+        }
 
         test(ctx);
     }
@@ -52,7 +89,7 @@ public class MainApp {
         //testHKExStockSymbolFetcher(ctx);
         //testYahooHKStockPriceFetcher(ctx);
         //testHKExStockOptionIVFetcher(ctx);
-        testHKExStockOptionHistoryPriceFetcher(ctx);
+        //testHKExStockOptionHistoryPriceFetcher(ctx);
     }
 
     private void clearDatabase(ApplicationContext ctx) {
@@ -379,36 +416,5 @@ public class MainApp {
         resultList.add(price3);
 
         return resultList;
-    }
-
-
-    /*public void testHKExStockOptionPriceFetcher(ApplicationContext ctx){
-        HKExStockOptionPriceFetcher hKExStockOptionPriceFetcher = (HKExStockOptionPriceFetcher)ctx.getBean("HKExStockOptionPriceFetcher");
-
-        hKExStockOptionPriceFetcher.run();
-    }*/
-
-    public void testHKExStockSymbolFetcher(ApplicationContext ctx){
-        HKExStockSymbolFetcher hKExStockSymbolFetcher = (HKExStockSymbolFetcher)ctx.getBean("HKExStockSymbolFetcher");
-
-        hKExStockSymbolFetcher.run();
-    }
-
-    public void testYahooHKStockPriceFetcher(ApplicationContext ctx){
-        YahooHKStockPriceFetcher yahooHKStockPriceFetcher = (YahooHKStockPriceFetcher)ctx.getBean("YahooHKStockPriceFetcher");
-
-        yahooHKStockPriceFetcher.run();
-    }
-
-    public void testHKExStockOptionIVFetcher(ApplicationContext ctx){
-        HKExStockOptionIVFetcher hkExStockOptionIVFetcher = (HKExStockOptionIVFetcher)ctx.getBean("HKExStockOptionIVFetcher");
-
-        hkExStockOptionIVFetcher.run();
-    }
-
-    public void testHKExStockOptionHistoryPriceFetcher(ApplicationContext ctx){
-        HKExStockOptionHistoryPriceFetcher fetcher = (HKExStockOptionHistoryPriceFetcher)ctx.getBean("HKExStockOptionHistoryPriceFetcher");
-
-        fetcher.run();
     }
 }

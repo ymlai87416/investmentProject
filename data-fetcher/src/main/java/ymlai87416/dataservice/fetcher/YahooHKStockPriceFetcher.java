@@ -48,7 +48,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
     MasterBackup masterBackup;
 
     @Override
-    public boolean run() {
+    public boolean run(Map<String, Object> parameter) {
         try{
             updateStartAndEndDate();
 

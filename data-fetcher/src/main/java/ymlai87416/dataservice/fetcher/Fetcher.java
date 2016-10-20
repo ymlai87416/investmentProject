@@ -6,13 +6,14 @@ import ymlai87416.dataservice.service.DataVendorService;
 import ymlai87416.dataservice.service.ExchangeService;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Tom on 7/10/2016.
  */
 public interface Fetcher {
 
-    boolean run();
+    boolean run(Map<String, Object> parameter);
 
     default Exchange getOrSaveExchange(ExchangeService exchangeService, Exchange exchange){
         List<Exchange> searchResult = exchangeService.searchExchange(exchange);

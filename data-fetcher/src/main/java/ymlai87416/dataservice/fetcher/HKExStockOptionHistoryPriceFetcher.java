@@ -8,12 +8,9 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import sun.security.pkcs.ParsingException;
+import ymlai87416.dataservice.domain.*;
 import ymlai87416.dataservice.reader.HKExStockOptionReportCSVReader;
 import ymlai87416.dataservice.utilities.Utilities;
-import ymlai87416.dataservice.domain.DailyPrice;
-import ymlai87416.dataservice.domain.DataVendor;
-import ymlai87416.dataservice.domain.Exchange;
-import ymlai87416.dataservice.domain.Symbol;
 import ymlai87416.dataservice.fetcher.constant.DataVendors;
 import ymlai87416.dataservice.fetcher.constant.Exchanges;
 import ymlai87416.dataservice.service.*;
@@ -40,6 +37,9 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
     private static SimpleDateFormat linkDateFormat = new SimpleDateFormat("yyMMdd");
 
+    Date startDate = new Date(2016-1900, 10-1, 14);
+    Date endDate = new Date();
+
     @Autowired
     ExchangeService exchangeService;
 
@@ -55,9 +55,14 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
     @Autowired
     MasterBackup masterBackup;
 
+    @Autowired
+    KeyValuePairService keyValuePairService;
+
     @Override
-    public boolean run() {
+    public boolean run(Map<String, Object> parameter) {
         File file = initMasterBackup();
+
+        determineStartTimeAndEndTime(parameter);
 
         if(!checkDownloadCompleteMark(file)){
             downloadZipFilesToFolder(file);
@@ -72,13 +77,21 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
         saveSymbolPricePairToDB(symbolList);
 
+        Progress p = new Progress();
+        p.lastProcessedDate = endDate;
+        writeProgressToDB(p);
+
         return true;
     }
 
-    private void downloadZipFilesToFolder(File masterDir){
-        Date startDate = new Date(2016-1900, 8-1, 12);
-        Date endDate = new Date();
+    private void determineStartTimeAndEndTime(Map<String, Object> parameter){
+        Progress progress = readProgressFromDB();
+        startDate  = Utilities.getNextDate(progress.lastProcessedDate);
+        endDate = new Date();
+    }
 
+    private void downloadZipFilesToFolder(File masterDir){
+        Date realEndDate = null;
         for(long time=startDate.getTime(); time < endDate.getTime(); time+=24*60*60*1000) {
             try {
                 Date ctime = new Date(time);
@@ -90,10 +103,16 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
                 FileOutputStream fos = new FileOutputStream(masterDir.getAbsoluteFile() + File.separator + zip);
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+
+                realEndDate = new Date(time);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
+
+        if(realEndDate == null)
+            realEndDate = startDate;
+        endDate = realEndDate;
     }
 
     private void unzipFolderToCSV(File masterDir){
@@ -313,5 +332,34 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
         catch(Exception ex){
             ex.printStackTrace();
         }
+    }
+
+    private void writeProgressToDB(Progress progress){
+        KeyValuePair pair = new KeyValuePair();
+        pair.setKey(this.getClass().getName());
+        pair.setValue(new SimpleDateFormat("yyyyMMdd").format(progress.lastProcessedDate));
+        keyValuePairService.saveKeyValuePair(Arrays.asList(pair));
+    }
+
+    private Progress readProgressFromDB(){
+        try {
+            KeyValuePair pair = keyValuePairService.searchValueByKey(this.getClass().getName());
+
+            if (pair != null) {
+                String info = pair.getValue();
+                Progress p = new Progress();
+                p.lastProcessedDate = (new SimpleDateFormat("yyyyMMdd")).parse(info);
+                return p;
+            }
+            return null;
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    private class Progress{
+        Date lastProcessedDate;
     }
 }

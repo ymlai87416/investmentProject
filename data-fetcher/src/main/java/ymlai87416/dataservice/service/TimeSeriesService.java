@@ -16,6 +16,8 @@ public interface TimeSeriesService {
 
     List<TimeSeries> searchTimeSeries(TimeSeries timeSeries);
 
+    List<TimeSeries> searchTimeSeries(TimeSeries timeSeries, boolean initChild);
+
     TimeSeries saveTimeSeries(TimeSeries timeSeries);
 
     List<TimeSeries> saveTimeSeriesInBatch(List<TimeSeries> timeSeriesList);

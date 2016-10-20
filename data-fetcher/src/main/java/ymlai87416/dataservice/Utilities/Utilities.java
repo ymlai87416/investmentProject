@@ -5,6 +5,7 @@ import ymlai87416.dataservice.fetcher.constant.FileEncoding;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Calendar;
 
 /**
  * Created by Tom on 6/10/2016.
@@ -64,6 +65,13 @@ public class Utilities {
             }
             to.write(buffer, 0, numBytes);
         }
+    }
+
+    public static java.util.Date getNextDate(java.util.Date date){
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add( Calendar.DATE, 1 );
+        return cal.getTime();
     }
 }
 

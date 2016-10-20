@@ -1,5 +1,6 @@
 package ymlai87416.dataservice.service.jpa;
 
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -54,6 +55,12 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
     @Override
     @Transactional(readOnly=true)
     public List<TimeSeries> searchTimeSeries(TimeSeries timeSeries) {
+        return searchTimeSeries(timeSeries, false);
+    }
+
+    @Override
+    @Transactional(readOnly=true)
+    public List<TimeSeries> searchTimeSeries(TimeSeries timeSeries, boolean initChild) {
         Predicate predicate;
         CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -80,6 +87,10 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
         Query query = em.createQuery(cq);
         List<TimeSeries> result = query.getResultList();
+        if(initChild){
+            for(TimeSeries obj : result)
+                Hibernate.initialize(obj.getTimePointList());
+        }
 
         return result;
     }

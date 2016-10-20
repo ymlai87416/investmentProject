@@ -91,3 +91,13 @@ CREATE TABLE time_point(
 	KEY index_series_id (series_id)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+CREATE TABLE key_value_collection(
+	id bigint NOT NULL AUTO_INCREMENT,
+	`key` varchar(255) NOT NULL,
+	`value` varchar(255) NOT NULL,
+	version bigint NOT NULL,
+	PRIMARY KEY (id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE INDEX index_key ON key_value_collection (`key`);
+

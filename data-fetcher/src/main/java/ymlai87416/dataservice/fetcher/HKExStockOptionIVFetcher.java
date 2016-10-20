@@ -1,6 +1,5 @@
 package ymlai87416.dataservice.fetcher;
 
-import com.opencsv.CSVReader;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ymlai87416.dataservice.reader.HKExStockOptionIVCSVReader;
+import ymlai87416.dataservice.service.KeyValuePairService;
 import ymlai87416.dataservice.utilities.Utilities;
 import ymlai87416.dataservice.domain.TimePoint;
 import ymlai87416.dataservice.domain.TimeSeries;
@@ -20,7 +20,6 @@ import ymlai87416.dataservice.service.TimePointService;
 import ymlai87416.dataservice.service.TimeSeriesService;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -46,7 +45,7 @@ public class HKExStockOptionIVFetcher implements Fetcher {
     MasterBackup masterBackup;
 
     @Override
-    public boolean run() {
+    public boolean run(Map<String, Object> parameter) {
         File masterDir = initMasterBackup();
 
         try{
@@ -90,7 +89,9 @@ public class HKExStockOptionIVFetcher implements Fetcher {
 
     private void saveIvTimeSeriesToDatabase(List<TimeSeries> volatilitySeriesList){
         for(TimeSeries timeSeries : volatilitySeriesList){
-            List<TimeSeries> timeSeriesInDBSearchResult = timeSeriesService.searchTimeSeries(timeSeries);
+            List<TimeSeries> timeSeriesInDBSearchResult = timeSeriesService.searchTimeSeries(timeSeries, true);
+
+            //TODO: init the time series time point collection list please.
 
             if(timeSeriesInDBSearchResult == null || timeSeriesInDBSearchResult.size() == 0){
                 timeSeriesService.saveTimeSeries(timeSeries);
@@ -122,11 +123,11 @@ public class HKExStockOptionIVFetcher implements Fetcher {
                     for(; indexDB < timePointsInDB.size(); ++indexDB){
                         if(timePointList.get(indexWeb).getTimePointDate().compareTo(
                                 timePointsInDB.get(indexDB).getTimePointDate()
-                        ) >= 0)
+                        ) <= 0)
                             break;
                     }
 
-                    if(indexDB > timePointsInDB.size()){
+                    if(indexDB >= timePointsInDB.size()){
                         timeSeriesInDB.getTimePointList().add(timePointList.get(indexWeb));
                         timePointList.get(indexWeb).setTimeSeries(timeSeriesInDB);
                     }
@@ -236,4 +237,5 @@ public class HKExStockOptionIVFetcher implements Fetcher {
             ex.printStackTrace();
         }
     }
+
 }
