@@ -53,7 +53,7 @@
             <value>${jdbc.password}</value>
         </property>
     </bean>
-    <context:property-placeholder location="jdbc.properties" ignore-unresolvable="true" order="1"/>
+    <context:property-placeholder location="${jdbc.prop.location}" ignore-unresolvable="true" order="1"/>
     <context:property-placeholder location="hibernate.properties" order="2"/>
 
     <context:annotation-config/>

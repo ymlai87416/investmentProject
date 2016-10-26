@@ -23,7 +23,7 @@ public class KeyValuePair {
     public void setId(Long id) {
         this.id = id;
     }
-    @Column(name = "key")
+    @Column(name = "`key`")
     public String getKey() {
         return key;
     }
@@ -32,7 +32,7 @@ public class KeyValuePair {
         this.key = key;
     }
 
-    @Column(name = "value")
+    @Column(name = "`value`")
     public String getValue() {
         return value;
     }

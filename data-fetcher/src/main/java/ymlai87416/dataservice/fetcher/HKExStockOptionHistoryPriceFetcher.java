@@ -37,8 +37,9 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
     private static SimpleDateFormat linkDateFormat = new SimpleDateFormat("yyMMdd");
 
-    Date startDate = new Date(2016-1900, 10-1, 14);
-    Date endDate = new Date();
+    Date startDate;
+    Date endDate;
+    Date processedDate;
 
     @Autowired
     ExchangeService exchangeService;
@@ -78,7 +79,9 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
         saveSymbolPricePairToDB(symbolList);
 
         Progress p = new Progress();
-        p.lastProcessedDate = endDate;
+
+        //TODO THe real end date is not today.
+        p.lastProcessedDate = processedDate;
         writeProgressToDB(p);
 
         return true;
@@ -86,7 +89,13 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
     private void determineStartTimeAndEndTime(Map<String, Object> parameter){
         Progress progress = readProgressFromDB();
-        startDate  = Utilities.getNextDate(progress.lastProcessedDate);
+        if(progress != null){
+            startDate  = Utilities.getNextDate(progress.lastProcessedDate);
+        }
+        else{
+            startDate = new Date(2016-1900, 10-1, 13);
+        }
+
         endDate = new Date();
     }
 
@@ -137,7 +146,7 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
                         if(newFile.exists())
                             newFile.delete();
 
-                        System.out.println("file unzip : "+ newFile.getAbsoluteFile());
+                        log.info("file unzip : "+ newFile.getAbsoluteFile());
 
                         //create all non exists folders
                         //else you will hit FileNotFoundException for compressed folder
@@ -188,16 +197,24 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
                     continue;
                 }
 
-                String csvFilePath = masterDir.getAbsolutePath() + File.separator + csvFileName;
+                if(processedDate == null || processedDate.compareTo(priceDate) > 0)
+                    processedDate = priceDate;
 
-                try {
-                    File csvFile = new File(csvFilePath);
-                    List<Pair<Symbol, DailyPrice>> intermediate = csvReader.readStockOptionReportCSV(csvFile.getAbsolutePath(), priceDate);
+                if(priceDate.compareTo(startDate) < 0)
+                    log.info(String.format("Skip file: %s", csvFileName));
+                else {
+                    log.info(String.format("Processing file: %s", csvFileName));
+                    String csvFilePath = masterDir.getAbsolutePath() + File.separator + csvFileName;
 
-                    result.addAll(intermediate);
+                    try {
+                        File csvFile = new File(csvFilePath);
+                        List<Pair<Symbol, DailyPrice>> intermediate = csvReader.readStockOptionReportCSV(csvFile.getAbsolutePath(), priceDate);
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+                        result.addAll(intermediate);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -205,6 +222,7 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
         return result;
     }
 
+    //TODO: Out of memory error
     private void saveSymbolPricePairToDB(List<Symbol> symbolList){
         for(Symbol symbol : symbolList){
 

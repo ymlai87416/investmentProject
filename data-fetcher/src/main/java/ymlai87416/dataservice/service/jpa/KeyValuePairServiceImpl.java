@@ -34,7 +34,14 @@ public class KeyValuePairServiceImpl implements KeyValuePairService {
                 "select s from KeyValuePair s where s.key = :e" , KeyValuePair.class);
         query = query.setParameter("e", key);
 
-        return query.getSingleResult();
+        KeyValuePair result;
+        try {
+            result = query.getSingleResult();
+        }
+        catch(Exception ex){
+            result = null;
+        }
+        return result;
     }
 
     @Override

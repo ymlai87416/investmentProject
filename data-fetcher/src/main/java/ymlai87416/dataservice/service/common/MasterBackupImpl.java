@@ -26,8 +26,13 @@ public class MasterBackupImpl implements MasterBackup {
 
     public MasterBackupImpl(){
         try {
-            input = new FileInputStream("app.properties");
-            prop.load(input);
+
+            String externalFileName = System.getProperty("app.properties");
+            InputStream fin = new FileInputStream(new File(externalFileName));
+            prop.load(fin);
+            //input = new FileInputStream("app.properties");
+            //input =this.getClass().getResourceAsStream("app.properties");
+            //prop.load(input);
 
             masterFolder = prop.getProperty("page.cache.dir");
 
