@@ -54,6 +54,8 @@ public class HKExStockSymbolFetcher implements Fetcher{
     @Override
     public synchronized boolean run(Map<String, Object> parameter){
         try{
+            log.info("Start fetching HK stock symbol...");
+
             File masterDir = initMasterBackup();
 
             HKExStockSymbolWebPageParser parser = new HKExStockSymbolWebPageParser(getOrSaveExchange(exchangeService, Exchanges.HKExchange));
@@ -96,6 +98,7 @@ public class HKExStockSymbolFetcher implements Fetcher{
             return false;
         }
 
+        log.info("Finish fetching HK stock symbol");
         return true;
     }
 

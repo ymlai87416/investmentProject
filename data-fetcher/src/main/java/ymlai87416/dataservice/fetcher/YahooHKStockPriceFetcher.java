@@ -50,6 +50,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
     @Override
     public boolean run(Map<String, Object> parameter) {
         try{
+            log.info("Downloading stock quote from Yahoo!");
             updateStartAndEndDate();
 
             File masterDir = initMasterBackup();
@@ -59,8 +60,10 @@ public class YahooHKStockPriceFetcher implements Fetcher{
             searchCriteria.setInstrument(Instruments.STOCK);
             searchCriteria.setExchange(getOrSaveExchange(exchangeService, Exchanges.HKExchange));
 
-            List<Symbol> allSymbols = symbolService.searchSymbol(searchCriteria, true);
+            List<Symbol> allSymbols = symbolService.searchSymbol(searchCriteria, false);
+            log.info("Got symbol list from database.");
             List<Symbol> redownloadDueToAdjustment = firstRoundDownloadDailyPrice(allSymbols);
+            log.info("Pass 1 data fetching finished.");
 
             boolean allCompleted = false;
             int retryCount = 0;
@@ -78,15 +81,20 @@ public class YahooHKStockPriceFetcher implements Fetcher{
                 }
                 catch(Exception ex){
                     ex.printStackTrace();
+                    log.error("Pass" + retryCount+ 1 +" encouter an exception.", ex);
                 }
+                log.info("Pass" + retryCount+ 1 +" data fetching finished.");
             }
 
 
             if(!isCached && allCompleted)
                 createCompleteMark(masterDir);
+
+            log.info("Complete downloading stock quote from Yahoo!");
             return true;
         }
         catch(Exception ex){
+            log.error("Exception occurred when downloading stock quote from Yahoo!", ex);
             return false;
         }
     }
@@ -97,6 +105,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
     }
 
     private File initMasterBackup(){
+        log.info("Create master backup directory for current data fetch round");
         File previousFolder = masterBackup.retrievedLatestBatchFolder(this.getClass());
 
         boolean readExistingFolder = true;
@@ -127,10 +136,12 @@ public class YahooHKStockPriceFetcher implements Fetcher{
         }
     }
 
+    //TODO: Reduce memory usage
     private List<Symbol> firstRoundDownloadDailyPrice(List<Symbol> allSymbols){
         List<Symbol> failedSymbol = new ArrayList<Symbol>();
 
         for(Symbol symbol : allSymbols){
+            log.info("First round: downloading symbol " + symbol.getName() );
             try{
                 boolean skipSave = false;
                 DateRange dateRange = decideDailyPriceDownloadDateRange(symbol);
@@ -163,7 +174,6 @@ public class YahooHKStockPriceFetcher implements Fetcher{
                         }
                     }
 
-                    //TODO: remove the first price, as we are done with it.
                     dailyPrices.remove(0);
                     if(dailyPrices.size() == 0)
                         skipSave = true;
@@ -172,9 +182,12 @@ public class YahooHKStockPriceFetcher implements Fetcher{
                 //save symbol
                 if(!skipSave)
                     dailyPriceService.saveDailyPriceInBatch(dailyPrices);
+
+                log.info("First round: completed downloading symbol " + symbol.getName() );
             }
             catch(Exception ex){
                 ex.printStackTrace();
+                log.error("Failed to retrieve info for the symbol " + symbol.getName() , ex);
                 failedSymbol.add(symbol);
             }
         }
@@ -185,6 +198,7 @@ public class YahooHKStockPriceFetcher implements Fetcher{
     private List<Symbol> retryDownloadDailyPrice(List<Symbol> redownloadDueToAdjustment){
         List<Symbol> failedSymbol = new ArrayList<Symbol>();
         for(Symbol symbol: redownloadDueToAdjustment){
+            log.info("Retry round: downloading symbol " + symbol.getName() );
             try {
                 DateRange dateRange = decideDailyPriceDownloadDateRange(symbol);
 
@@ -195,9 +209,11 @@ public class YahooHKStockPriceFetcher implements Fetcher{
 
                 //save symbol
                 dailyPriceService.saveDailyPriceInBatch(dailyPrices);
+                log.info("Retry round: completed downloading symbol " + symbol.getName() );
             }
             catch(Exception ex){
                 ex.printStackTrace();
+                log.error("Failed to retrieve info for the symbol " + symbol.getName() , ex);
                 failedSymbol.add(symbol);
             }
         }
@@ -206,6 +222,9 @@ public class YahooHKStockPriceFetcher implements Fetcher{
     }
 
     private List<DailyPrice> getDailyPriceFromYahoo(Symbol symbol, DateRange dateRange) throws IOException {
+        log.info("Getting daily price from Yahoo! Finance for symbol:  " + symbol.getName() +
+                " from " + dateRange.startDate.toString() + " to " + dateRange.endDate.toString());
+
         Stock stock = YahooFinance.get(symbol.getTicker());
         Calendar startDate = Calendar.getInstance();
         startDate.setTime(dateRange.startDate);
@@ -242,6 +261,9 @@ public class YahooHKStockPriceFetcher implements Fetcher{
                 return o1.getPriceDate().compareTo(o2.getPriceDate());
             }
         });
+
+        log.info("Completed getting daily price from Yahoo! Finance for symbol:  " + symbol.getName() +
+                " from " + dateRange.startDate.toString() + " to " + dateRange.endDate.toString());
 
         return dailyPrices;
     }

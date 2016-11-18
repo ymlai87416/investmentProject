@@ -91,8 +91,6 @@ public class HKExStockOptionIVFetcher implements Fetcher {
         for(TimeSeries timeSeries : volatilitySeriesList){
             List<TimeSeries> timeSeriesInDBSearchResult = timeSeriesService.searchTimeSeries(timeSeries, true);
 
-            //TODO: init the time series time point collection list please.
-
             if(timeSeriesInDBSearchResult == null || timeSeriesInDBSearchResult.size() == 0){
                 timeSeriesService.saveTimeSeries(timeSeries);
             }

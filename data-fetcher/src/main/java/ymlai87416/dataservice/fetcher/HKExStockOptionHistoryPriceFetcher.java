@@ -6,8 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-import sun.security.pkcs.ParsingException;
 import ymlai87416.dataservice.domain.*;
 import ymlai87416.dataservice.reader.HKExStockOptionReportCSVReader;
 import ymlai87416.dataservice.utilities.Utilities;
@@ -197,7 +195,7 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
                     continue;
                 }
 
-                if(processedDate == null || processedDate.compareTo(priceDate) > 0)
+                if(processedDate == null || processedDate.compareTo(priceDate) < 0)
                     processedDate = priceDate;
 
                 if(priceDate.compareTo(startDate) < 0)
@@ -224,9 +222,14 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
     //TODO: Out of memory error
     private void saveSymbolPricePairToDB(List<Symbol> symbolList){
+        log.info(String.format("Processing %d records", symbolList.size()));
         for(Symbol symbol : symbolList){
+            log.info("Processing symbol" + symbol.getName());
+            List<DailyPrice> symbolDialyPriceList = symbol.getDailyPriceList();
 
-            List<Symbol> symbolDBSearchResult = symbolService.searchSymbol(symbol, true);
+            Collections.sort(symbolDialyPriceList, new DailyPriceComparator());
+
+            List<Symbol> symbolDBSearchResult = symbolService.searchSymbol(symbol, false);
 
             if(symbolDBSearchResult == null || symbolDBSearchResult.size() == 0){
                 symbolService.saveSymbol(symbol);
@@ -239,39 +242,50 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
                     continue;
                 }
 
+                if(symbolDialyPriceList.size() == 0) continue;
+
                 Symbol symbolDB = symbolDBSearchResult.get(0);
-                List<DailyPrice> existingDailyPrice = symbolDB.getDailyPriceList();
-                if(existingDailyPrice == null){
-                    for(DailyPrice dailyPrice : symbol.getDailyPriceList()) {
+
+                List<DailyPrice> existingDailyPrice = dailyPriceService.getDailyPriceBySymbolAndDateRange(
+                        symbolDB, symbolDialyPriceList.get(0).getPriceDate(), symbolDialyPriceList.get(symbolDialyPriceList.size()-1).getPriceDate());
+
+                Collections.sort(existingDailyPrice, new DailyPriceComparator());
+
+                if(existingDailyPrice ==null || existingDailyPrice.size() == 0){
+                    for(DailyPrice dailyPrice : symbolDialyPriceList) {
                         dailyPrice.setSymbol(symbolDB);
                         dailyPriceService.saveDailyPrice(dailyPrice);
                     }
                 }
                 else{
-                    List<DailyPrice> dailyPriceList = symbol.getDailyPriceList();
+                    int i=0, j=0;
+                    for(; i<symbolDialyPriceList.size(); ++i){
+                        DailyPrice dbVersion = null;
+                        for(; j<existingDailyPrice.size(); ++j){
 
-                    for(DailyPrice dailyPrice : dailyPriceList){
-                        boolean insert = true;
-                        for(DailyPrice dp : symbolDB.getDailyPriceList()){
-                            if(dp.getPriceDate().compareTo(dailyPrice.getPriceDate()) == 0){
-                                insert=false;
-                                dp.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
-                                dp.setOpenPrice(dailyPrice.getOpenPrice());
-                                dp.setHighPrice(dailyPrice.getHighPrice());
-                                dp.setLowPrice(dailyPrice.getLowPrice());
-                                dp.setClosePrice(dailyPrice.getClosePrice());
-                                dp.setAdjClosePrice(dailyPrice.getAdjClosePrice());
-                                dp.setVolume(dailyPrice.getVolume());
-                                dp.setIv(dailyPrice.getIv());
-                                dp.setOpenInterest(dailyPrice.getOpenInterest());
-
-                                //save and break;
-                                dailyPriceService.saveDailyPrice(dp);
-                                break;
+                            if(symbolDialyPriceList.get(i).getPriceDate().equals(existingDailyPrice.get(j).getPriceDate())){
+                                dbVersion = existingDailyPrice.get(j);
                             }
+                            else if(symbolDialyPriceList.get(i).getPriceDate().before(existingDailyPrice.get(j).getPriceDate()))
+                                break;
                         }
+                        DailyPrice dailyPrice = symbolDialyPriceList.get(i);
 
-                        if(insert == true){
+                        if(dbVersion != null){
+                            dbVersion.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
+                            dbVersion.setOpenPrice(dailyPrice.getOpenPrice());
+                            dbVersion.setHighPrice(dailyPrice.getHighPrice());
+                            dbVersion.setLowPrice(dailyPrice.getLowPrice());
+                            dbVersion.setClosePrice(dailyPrice.getClosePrice());
+                            dbVersion.setAdjClosePrice(dailyPrice.getAdjClosePrice());
+                            dbVersion.setVolume(dailyPrice.getVolume());
+                            dbVersion.setIv(dailyPrice.getIv());
+                            dbVersion.setOpenInterest(dailyPrice.getOpenInterest());
+
+                            //save and break;
+                            dailyPriceService.saveDailyPrice(dbVersion);
+                        }
+                        else{
                             dailyPrice.setSymbol(symbolDB);
                             dailyPriceService.saveDailyPrice(dailyPrice);
                         }
@@ -380,4 +394,16 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
     private class Progress{
         Date lastProcessedDate;
     }
+
+    private class DailyPriceComparator implements Comparator<DailyPrice>{
+
+        @Override
+        public int compare(DailyPrice o1, DailyPrice o2) {
+            if(o1.getPriceDate().before(o2.getPriceDate()))
+                return -1;
+            else if(o1.getPriceDate().after(o2.getPriceDate()))
+                return 1;
+            else return 0;
+        }
+    };
 }
