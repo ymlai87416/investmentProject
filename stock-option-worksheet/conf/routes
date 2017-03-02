@@ -1,0 +1,14 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                                               controllers.Application.index
+GET     /stockOption                                    controllers.Application.list
+GET     /stockOption/:sehkcode                          controllers.Application.listByCode(sehkcode: Long)
+GET     /stockOptionHistory/:sehkcode/:pricedate        controllers.Application.detail(sehkcode:Long, pricedate: String)
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+    
