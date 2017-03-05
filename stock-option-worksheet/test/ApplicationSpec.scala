@@ -1,7 +1,7 @@
+import model.Database.IVSeries
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
-
 import play.api.test._
 import play.api.test.Helpers._
 
@@ -25,6 +25,15 @@ class ApplicationSpec extends Specification {
       status(home) must equalTo(OK)
       contentType(home) must beSome.which(_ == "text/html")
       contentAsString(home) must contain ("Your new application is ready.")
+    }
+
+    "ivseries should equal with other ivseries if parameters are equals" in new WithApplication{
+      val ivSeries1 = new IVSeries(3, "Testing series")
+      val ivSeries2 = new IVSeries(3, "Testing series")
+      val ivSeries3 = new IVSeries(4, "Another testing series")
+
+      assert(ivSeries1 == ivSeries2)
+      assert(ivSeries1 != ivSeries3)
     }
   }
 }

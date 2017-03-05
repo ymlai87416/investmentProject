@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
   cache ,
   ws   ,
   specs2 % Test,
-  "com.typesafe.play" %% "anorm" % "2.5.0"
+  "com.typesafe.play" %% "anorm" % "2.5.2",
+  "mysql" % "mysql-connector-java" % "5.1.41"
 )
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )  

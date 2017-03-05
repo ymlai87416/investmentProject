@@ -1,0 +1,101 @@
+@import model.Database.Stock
+@import model.Database.StockOption
+@import model.Database.IVSeriesTimePoint
+@import org.joda.time.DateTime
+@import java.util.Locale
+
+@(stock: Stock, date: DateTime, minIV: Float, maxIV: Float, meanIV: Float, stdIV: Float, currentIV: Float, timePoints: List[IVSeriesTimePoint])
+
+@stockCodeSelect(selectedStock: Stock) = {
+    <select name="asset" class="form-control">
+    @for(p <- StockOption.stockFullList){
+        @if(p._1 == selectedStock.sehkCode) {
+            <option selected value="@p._1">@p._2</option>
+        } else {
+            <option value="@p._2">@p._2</option>
+        }
+    }
+    </select>
+}
+
+@main("Rich lab stock option worksheet"){
+
+    <div class="container">
+        <div class="row">
+            <h2>@stock.name @date.toString("yyyy-MM-dd", Locale.US)</h2>
+        </div>
+        <div class="row">
+            <form class="form-inline">
+                @stockCodeSelect(stock)
+
+                <div class="form-group">
+                    <div class='input-group date' id='datetimepicker1'>
+                        <input type='text' class="form-control" />
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                        $(function () {
+                            $('#datetimepicker1').datetimepicker();
+                        });
+                </script>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+
+        <table class="table">
+            <tr style="background-color:powderblue"><th colspan="2">Latest</th></tr>
+            <tr>
+                <td>Current IV</td>
+                <td>@currentIV</td>
+            </tr>
+            <tr style="background-color:powderblue"><th colspan="2">History</th></tr>
+            <tr><td>max IV</td><td>@maxIV</td></tr>
+            <tr><td>min IV</td><td>@minIV</td></tr>
+            <tr><td>average IV</td><td>@meanIV</td></tr>
+            <tr><td>standard deviation</td><td>@stdIV</td></tr>
+        </table>
+    </div>
+
+        <!--<div id="stockIVDiv" class="center-block" style="width:600px;height:480px"> here we draw the stock iv chart </div>-->
+
+    <script>
+
+        (function() {
+            var d3 = Plotly.d3;
+
+            var WIDTH_IN_PERCENT_OF_PARENT = 60,
+                    HEIGHT_IN_PERCENT_OF_PARENT = 80;
+
+            var gd3 = d3.select('body')
+                    .append('div')
+                    .style({
+                        width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+                        'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%',
+
+                        height: 480
+                    });
+
+            var gd = gd3.node();
+
+            Plotly.plot(gd, [{
+                type: 'scatter',
+                x: [@Html(timePoints.map(x => ("'" + x.date.toString("yyyy-MM-dd", Locale.US)) + " 00:00:00'").mkString(","))],
+                y: [@timePoints.map(x => x.value).mkString(",")]
+            }], {
+                title: 'Implied volatility',
+                font: {
+                    size: 16
+                }
+            });
+
+            window.onresize = function() {
+                Plotly.Plots.resize(gd);
+            };
+
+        })();
+    </script>
+}

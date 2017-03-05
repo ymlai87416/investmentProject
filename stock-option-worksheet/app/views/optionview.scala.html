@@ -1,0 +1,68 @@
+@import model.Database.StockOption
+@import model.Database.StockOptionHistory
+@import model.Database.Stock
+@import model.Database.StockHistory
+@import org.joda.time.DateTime
+
+@import java.util.Locale
+@(stock: Stock, stockHistory: StockHistory, date: DateTime, expiryDays: List[DateTime], strikePrice: List[Int], infoMap: Map[(DateTime, Int, Character), AnyVal])
+
+@tableHeader(expiryDays: List[DateTime]) = {
+    <th>Strike Price</th>
+    <th>Call</th>
+    @for(p <- expiryDays) {
+        <th>@p.toString("MMMyy", Locale.US)</th>
+    }
+    <th>Put</th>
+    @for(p <- expiryDays) {
+        <th>@p.toString("MMMyy", Locale.US)</th>
+    }
+}
+
+@tableRow(strikePrice: Int, expiryDays: List[DateTime], infoMap: Map[(DateTime, Int, Character), AnyVal]) = {
+    <td>@(strikePrice/1000.0f)</td>
+    <td></td>
+    @for(p <- expiryDays){
+        <td>@infoMap.get((p, strikePrice, 'C'))</td>
+    }
+    <td></td>
+    @for(p <- expiryDays){
+        <td>@infoMap.get((p, strikePrice, 'P'))</td>
+    }
+}
+
+@stockCodeSelect(selectedStock: Stock) = {
+    <select>
+    @for(p <- StockOption.stockFullList){
+        @if(p._1 == selectedStock.sehkCode) {
+            <option selected value="@p._1">@p._2</option>
+        } else {
+            <option value="@p._2">@p._2</option>
+        }
+    }
+    </select>
+}
+
+@main("Rich lab stock option worksheet"){
+    <div class="container" style="background-color:#ff00ff">
+
+    </div>
+
+    @stock.ticker @stock.name<br/>
+    Close price: @stockHistory.adjClosePrice<br/>
+    Opening price: @stockHistory.openPrice<br/>
+    Daily high: @stockHistory.dailyHigh<br/>
+    Daily low: @stockHistory.dailyLow<br/>
+    Volume: @stockHistory.volume<br/>
+
+    Stock option list: <br/>
+
+    <div class="modal-body">
+        <table class="table">
+            <tr>@tableHeader(expiryDays)</tr>
+            @for(p <- strikePrice){
+                <tr>@tableRow(p, expiryDays, infoMap)</tr>
+            }
+        </table>
+    </div>
+}

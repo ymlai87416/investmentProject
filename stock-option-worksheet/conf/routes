@@ -3,12 +3,16 @@
 # ~~~~
 
 # Home page
-GET     /                                               controllers.Application.index
-GET     /stockOption                                    controllers.Application.list
-GET     /stockOption/:sehkcode                          controllers.Application.listByCode(sehkcode: Long)
-GET     /stockOptionHistory/:sehkcode/:pricedate        controllers.Application.detail(sehkcode:Long, pricedate: String)
+GET     /                                                           controllers.Application.index
+#GET     /stockOption                                               controllers.Application.list
+GET     /stockOption/:sehkcode                                      controllers.Application.listByCode(sehkcode: Int)
+GET     /stockOptionHistory/openInterest/:sehkcode/:pricedate       controllers.Application.detailOpenInterest(sehkcode:Int, pricedate: String)
+GET     /stockOptionHistory/settlePrice/:sehkcode/:pricedate        controllers.Application.detailSettlePrice(sehkcode:Int, pricedate: String)
+GET     /stockOptionIV/:sehkcode/:pricedate                         controllers.Application.ivDetail(sehkcode: Int, pricedate: String)
+
+# Restful interface
+#GET     /rest/stockOptionHistory/:sehkcode/:pricedate
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-    
