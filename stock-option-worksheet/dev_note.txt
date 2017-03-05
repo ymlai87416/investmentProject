@@ -1,0 +1,5 @@
+the bower is installed at
+
+C:\Users\Tom\AppData\Roaming\npm\bower.cmd
+
+use PATH=C:\Users\Tom\AppData\Roaming\npm;%PATH%

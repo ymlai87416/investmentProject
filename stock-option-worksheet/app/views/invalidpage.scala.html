@@ -1,5 +1,11 @@
 @(errorMsg: String)
 
-@main("Rich lab stock option worksheet") {
-    <p>Sorry, the page requested is not accessible, @errorMsg </p>
+@main("Super rich fund stock option worksheet error page") {
+    <div class="container">
+        <div class="alert alert-danger" role="alert">
+            <strong>Sorry, the page requested is not accessible.</strong> Please <a href="javascript:history.go(-1)">Go Back</a> and try submitting again.
+            <p> @errorMsg </p>
+        </div>
+    </div>
+
 }

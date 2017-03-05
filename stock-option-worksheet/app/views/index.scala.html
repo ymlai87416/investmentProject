@@ -1,7 +1,8 @@
 @(message: String)
 
-@main("Welcome to Play") {
-
-    @play20.welcome(message)
-
+@main("Super rich fund stock option IV worksheet entry page") {
+    <div class="container">
+        <p>For checking implied volatility, please click <a href="@routes.Application.ivDetail(5, "2017-3-3")">here</a></p>
+        <p>For checking option price and open interest, please click <a href="@routes.Application.detailOpenInterest(5, "2017-3-3")">here</a></p>
+    </div>
 }

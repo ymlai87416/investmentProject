@@ -8,6 +8,8 @@ import play.api._
 import play.api.mvc._
 import util.Joda._
 
+import scala.reflect.internal.util.Statistics
+
 object Application extends Controller {
 
   val sqlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd")
@@ -41,9 +43,10 @@ object Application extends Controller {
     val date = new DateTime(sqlDateTimeFormat.parse(priceDate).getTime())
     val stockOptionHistoryOpt = StockOption.findBySEHKCodeWithHistory(sehkCode, date)
     val stockOpt= Stock.findBySEHKCodeWithHistory(sehkCode, date)
+    val statOpt = Stock.getStockStatistic(sehkCode, date.minusYears(1), date) //TODO: remove the constant 1 year
 
-    (stockOptionHistoryOpt, stockOpt) match {
-      case (Some(stockOptionHistory), Some((stock, stockHistory))) => {
+    (stockOptionHistoryOpt, stockOpt, statOpt) match {
+      case (Some(stockOptionHistory), Some((stock, stockHistory)), Some(statRaw)) => {
 
         val expriyDays: List[DateTime] = stockOptionHistory.map(x => x._1.expiryDate).toSet.toList.sorted
         val strikePrices: List[Int] = stockOptionHistory.map(x => (x._1.strikePrice * 1000) toInt).toSet.toList.sorted
@@ -53,7 +56,9 @@ object Application extends Controller {
             if (dataType == "openInterest") _._2.openInterest else _._2.settlePrice
           }.head)
 
-        Ok(views.html.optionview(stock, stockHistory, date, expriyDays, strikePrices, infoMap))
+        val stat = new Statistic(statRaw._1, statRaw._2, statRaw._3, statRaw._4, statRaw._5, statRaw._6)
+
+        Ok(views.html.optionview(stock, stockHistory, date, stat, expriyDays, strikePrices, infoMap, dataType))
       }
       case _ => Ok(views.html.invalidpage("No such stock code: " + sehkCode))
     }
@@ -63,7 +68,7 @@ object Application extends Controller {
     val date = new DateTime(sqlDateTimeFormat.parse(priceDate).getTime())
     val stockOpt: Option[(Stock, StockHistory)] = Stock.findBySEHKCodeWithHistory(sehkCode, date)
     val ivSeriesOpt: Option[List[IVSeriesTimePoint]] = IVSeries.findBySEHKCodeWithTimePoint(sehkCode, date).map{
-      x => x.filter(x => x._1.seriesType=="Implied volatility").values.head  //todo: how to improve this, head may throw exception
+      x => x.filter(x => x._1.seriesType=="Implied volatility").values.headOption.getOrElse(List())
     }
 
     (stockOpt, ivSeriesOpt) match{

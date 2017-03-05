@@ -7,30 +7,30 @@
 @(stock: Stock, date: DateTime, minIV: Float, maxIV: Float, meanIV: Float, stdIV: Float, currentIV: Float, timePoints: List[IVSeriesTimePoint])
 
 @stockCodeSelect(selectedStock: Stock) = {
-    <select name="asset" class="form-control">
+    <select name="asset" class="form-control" id="assetViewBy">
     @for(p <- StockOption.stockFullList){
-        @if(p._1 == selectedStock.sehkCode) {
-            <option selected value="@p._1">@p._2</option>
+        @if(selectedStock.sehkCode.map(p._1==).getOrElse(false)) {
+            <option selected value="@p._1">@p._1 - @p._2</option>
         } else {
-            <option value="@p._2">@p._2</option>
+            <option value="@p._1">@p._1 - @p._2</option>
         }
     }
     </select>
 }
 
-@main("Rich lab stock option worksheet"){
+@main("Super rich fund stock option IV worksheet"){
 
     <div class="container">
         <div class="row">
             <h2>@stock.name @date.toString("yyyy-MM-dd", Locale.US)</h2>
         </div>
         <div class="row">
-            <form class="form-inline">
+            <form class="form-inline" action="javascript:void(0)">
                 @stockCodeSelect(stock)
 
                 <div class="form-group">
                     <div class='input-group date' id='datetimepicker1'>
-                        <input type='text' class="form-control" />
+                        <input type='text' class="form-control" id="dateTimePicker" name="date"/>
                         <span class="input-group-addon">
                             <span class="glyphicon glyphicon-calendar"></span>
                         </span>
@@ -38,11 +38,13 @@
                 </div>
                 <script type="text/javascript">
                         $(function () {
-                            $('#datetimepicker1').datetimepicker();
+                            $('#datetimepicker1').datetimepicker({
+                                defaultDate: "@date.toString("MM/dd/yyyy", Locale.US)"
+                            });
                         });
                 </script>
 
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <input type="button" class="btn btn-primary" onclick="redirectPage();" value="Submit" />
             </form>
         </div>
 
@@ -53,10 +55,10 @@
                 <td>@currentIV</td>
             </tr>
             <tr style="background-color:powderblue"><th colspan="2">History</th></tr>
-            <tr><td>max IV</td><td>@maxIV</td></tr>
-            <tr><td>min IV</td><td>@minIV</td></tr>
-            <tr><td>average IV</td><td>@meanIV</td></tr>
-            <tr><td>standard deviation</td><td>@stdIV</td></tr>
+            <tr><td>Maximum IV</td><td>@maxIV</td></tr>
+            <tr><td>Minimum IV</td><td>@minIV</td></tr>
+            <tr><td>Average IV</td><td>@meanIV</td></tr>
+            <tr><td>Standard deviation</td><td>@stdIV</td></tr>
         </table>
     </div>
 
@@ -97,5 +99,22 @@
             };
 
         })();
+
+        function redirectPage(){
+            var date =document.getElementById("dateTimePicker").value;
+
+            var assetCtrl = document.getElementById("assetViewBy");
+            var asset = assetCtrl.options[assetCtrl.selectedIndex].value;
+
+            var url="@routes.Application.ivDetail(0, date.toString("yyyy-MM-dd", Locale.US))".replace("0", asset);
+            try{
+                var date2 = moment(date, "MM/DD/YYYY HH:mm A").format("YYYY-MM-DD")
+                url=url.replace("@date.toString("yyyy-MM-dd", Locale.US)", date2);
+            }
+            catch(err) { }
+
+            window.location.href=url
+
+        }
     </script>
 }

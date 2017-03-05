@@ -393,17 +393,19 @@ object Stock{
   }
 
   val statisticParser =
-    get[java.math.BigDecimal]("min_price") ~ get[java.math.BigDecimal]("max_price") ~ get[java.math.BigDecimal]("mean_price") ~ get[java.math.BigDecimal]("mean_std") map {
-      case minPrice ~ maxPrice ~meanPrice ~ stdPrice => (minPrice.floatValue(), maxPrice.floatValue(), meanPrice.floatValue(), stdPrice.floatValue())
+    date("start_date") ~ date("end_date") ~ get[java.math.BigDecimal]("min_price") ~ get[java.math.BigDecimal]("max_price") ~
+      get[java.math.BigDecimal]("mean_price") ~ get[java.math.BigDecimal]("mean_std") map {
+      case startDate ~ endDate ~ minPrice ~ maxPrice ~meanPrice ~ stdPrice =>
+        (new DateTime(startDate.getTime()), new DateTime(endDate.getTime()), minPrice.floatValue(), maxPrice.floatValue(), meanPrice.floatValue(), stdPrice.floatValue())
     }
 
-  def getStockStatistic(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[(Float, Float, Float, Float)]= {
+  def getStockStatistic(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[(DateTime, DateTime, Float, Float, Float, Float)]= {
     DB.withConnection{
       implicit connection =>
         val ticker = convertToTicker(sehkCode)
         val sql = SQL(
-          """select min(b.adj_close_price) as min_price, max(b.adj_close_price) as max_price,
-          | mean(b.adj_close_price) as mean_price, std(b.adj_close_price) as mean_std
+          """select min(b.price_date) as start_date, max(b.price_date) as end_date, min(b.adj_close_price) as min_price, max(b.adj_close_price) as max_price,
+          | avg(b.adj_close_price) as mean_price, stddev_samp(b.adj_close_price) as mean_std
           | from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
           | where instrument = 'Stock' and ticker = {ticker} and b.price_date between {startDate} and {endDate}
         """.stripMargin)
