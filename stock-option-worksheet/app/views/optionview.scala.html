@@ -33,11 +33,11 @@
 
 @stockCodeSelect(selectedStock: Stock) = {
     <select name="asset" class="form-control" id="assetViewBy">
-    @for(p <- StockOption.stockFullList){
-        @if(selectedStock.sehkCode.map(p._1==).getOrElse(false)) {
-            <option selected value="@p._1">@p._1 - @p._2</option>
+    @for(p <- StockOption.underlyingStock){
+        @if(selectedStock.sehkCode.map(p.sehkCode==).getOrElse(false)) {
+            <option selected value="@p.sehkCode">@p.sehkCode - @p.name</option>
         } else {
-            <option value="@p._1">@p._1 - @p._2</option>
+            <option value="@p.sehkCode">@p.sehkCode - @p.name</option>
         }
     }
     </select>

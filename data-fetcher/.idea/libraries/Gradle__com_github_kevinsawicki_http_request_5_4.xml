@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.github.kevinsawicki:http-request:5.4">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.kevinsawicki/http-request/5.4/fdda60db14ddaf113b64719c4e57cc0e19573ff6/http-request-5.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.kevinsawicki/http-request/5.4/1d5b3090c7ec7c02da0e828d3838f72c13ac9ca4/http-request-5.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

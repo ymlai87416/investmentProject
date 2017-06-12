@@ -106,40 +106,43 @@ public class HKExStockOptionIVFetcher implements Fetcher {
                 };
 
                 List<TimePoint> timePointList = timeSeries.getTimePointList();
-                Collections.sort(timePointList,timePointComparator);
 
-                java.sql.Date startDate = timePointList.get(0).getTimePointDate();
-                java.sql.Date endDate = timePointList.get(timePointList.size()-1).getTimePointDate();
+                if(timePointList != null){
+                    Collections.sort(timePointList,timePointComparator);
 
-                List<TimePoint> timePointsInDB = timePointService.getTimePointByTimeSeriesAndDateRange(timeSeriesInDB, startDate, endDate);
+                    java.sql.Date startDate = timePointList.get(0).getTimePointDate();
+                    java.sql.Date endDate = timePointList.get(timePointList.size()-1).getTimePointDate();
 
-                Collections.sort(timePointsInDB, timePointComparator );
+                    List<TimePoint> timePointsInDB = timePointService.getTimePointByTimeSeriesAndDateRange(timeSeriesInDB, startDate, endDate);
 
-                int indexDB = 0; int indexWeb;
+                    Collections.sort(timePointsInDB, timePointComparator );
 
-                for(indexWeb = 0; indexWeb < timePointList.size(); ++indexWeb){
-                    for(; indexDB < timePointsInDB.size(); ++indexDB){
-                        if(timePointList.get(indexWeb).getTimePointDate().compareTo(
-                                timePointsInDB.get(indexDB).getTimePointDate()
-                        ) <= 0)
-                            break;
-                    }
+                    int indexDB = 0; int indexWeb;
 
-                    if(indexDB >= timePointsInDB.size()){
-                        timeSeriesInDB.getTimePointList().add(timePointList.get(indexWeb));
-                        timePointList.get(indexWeb).setTimeSeries(timeSeriesInDB);
-                    }
-                    else{
-                        if(timePointsInDB.get(indexDB).getTimePointDate().compareTo(
-                                timePointList.get(indexWeb).getTimePointDate()
-                        ) == 0){
-                            //update the database record
-                            TimePoint timePointInDB = timePointsInDB.get(indexDB);
-                            TimePoint timePointFromWeb = timePointList.get(indexWeb);
+                    for(indexWeb = 0; indexWeb < timePointList.size(); ++indexWeb){
+                        for(; indexDB < timePointsInDB.size(); ++indexDB){
+                            if(timePointList.get(indexWeb).getTimePointDate().compareTo(
+                                    timePointsInDB.get(indexDB).getTimePointDate()
+                            ) <= 0)
+                                break;
+                        }
 
-                            if(timePointInDB.getValue() != timePointFromWeb.getValue()){
-                                timePointInDB.setValue(timePointFromWeb.getValue());
-                                timePointInDB.setLastUpdatedDate(Utilities.getCurrentSQLDate());
+                        if(indexDB >= timePointsInDB.size()){
+                            timeSeriesInDB.getTimePointList().add(timePointList.get(indexWeb));
+                            timePointList.get(indexWeb).setTimeSeries(timeSeriesInDB);
+                        }
+                        else{
+                            if(timePointsInDB.get(indexDB).getTimePointDate().compareTo(
+                                    timePointList.get(indexWeb).getTimePointDate()
+                            ) == 0){
+                                //update the database record
+                                TimePoint timePointInDB = timePointsInDB.get(indexDB);
+                                TimePoint timePointFromWeb = timePointList.get(indexWeb);
+
+                                if(timePointInDB.getValue() != timePointFromWeb.getValue()){
+                                    timePointInDB.setValue(timePointFromWeb.getValue());
+                                    timePointInDB.setLastUpdatedDate(Utilities.getCurrentSQLDate());
+                                }
                             }
                         }
                     }

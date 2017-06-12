@@ -12,7 +12,13 @@ GET     /stockOptionIV/:sehkcode/:pricedate                         controllers.
 
 # Restful interface
 #GET     /rest/stockOptionHistory/:sehkcode/:pricedate
+GET     /rest/stockOption/list                                      controllers.ApplicationRestful.getStockHavingStockOptionAvaliable
+GET     /rest/stockOption/:sehkcode                                 controllers.ApplicationRestful.getStockOptionHistoryByStockCode(sehkcode: Int)
+GET     /rest/stockOption/iv/:sehkcode                              controllers.ApplicationRestful.getStockOptionIVListByStockCode(sehkcode: Int)
+GET     /rest/stockOption/:optionCode                               controllers.ApplicationRestful.getStockOptionHistoryByOptionCode(optionCode: String)
+GET     /rest/stock/:sehkcode                                       controllers.ApplicationRestful.getStockPriceHistoryByStockCode(sehkcode: Int)
+GET     /rest/stock/pricestat/:sehkcode                             controllers.ApplicationRestful.getStockPriceHistoryStatisticByStockCode(sehkcode: Int)
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /assets/*file                                               controllers.Assets.at(path="/public", file)
 

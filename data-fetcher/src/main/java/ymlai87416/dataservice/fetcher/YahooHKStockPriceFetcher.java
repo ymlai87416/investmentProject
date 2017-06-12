@@ -49,6 +49,8 @@ public class YahooHKStockPriceFetcher implements Fetcher{
 
     @Override
     public boolean run(Map<String, Object> parameter) {
+
+        System.setProperty("yahoofinance.baseurl.histquotes", "https://ichart.yahoo.com/table.csv");
         try{
             log.info("Downloading stock quote from Yahoo!");
             updateStartAndEndDate();

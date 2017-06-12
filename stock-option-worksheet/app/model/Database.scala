@@ -55,7 +55,7 @@ class StockOptionHistory(val id:Long, val stockOptionId: Long, val priceDate: Da
 {
 }
 
-class StockHistory(val id:Long, val stockOptionId: Long, val priceDate: DateTime,
+class StockHistory(val id:Long, val stockId: Long, val priceDate: DateTime,
                    val openPrice: Float, val dailyHigh: Float, val dailyLow: Float,
                    val closePrice: Float, val adjClosePrice: Float, val volume: Long)
 {
@@ -86,7 +86,17 @@ class IVSeries(val id:Long, val seriesName: String){
 
 class IVSeriesTimePoint(val id: Long, val date: DateTime, val value: Float)
 
+case class StockStatistic(stockId: Long, startDate: DateTime, endDate: DateTime,
+                          minPice: Float, maxPrice: Float, meanPrice: Float, stdPrice: Float )
+
+case class StockOptionIVStatistic(stockId: Long, startDate: DateTime, endDate: DateTime,
+                                  maxIV: Float, minIV: Float, meanIV: Float, stdIV: Float)
+
 object StockOption {
+
+  def apply(id: Long, ticker: String, name: String) = new StockOption(id, ticker, name)
+  def unapply(stockOption: StockOption): Option[(Long, String, String)] = Some((stockOption.id, stockOption.ticker, stockOption.name))
+
   val dt:DateTimeFormatter = DateTimeFormat.forPattern("MMMyy").withLocale(Locale.US)
 
   val stockAbbrList = HashMap[Int, String](
@@ -173,9 +183,13 @@ object StockOption {
     3328 -> "BCM",
     3888 -> "KSO",
     3968 -> "CMB",
-    3988 -> "XBC"
+    3988 -> "XBC",
+    175 -> "GAH",
+    823 -> "LNK",
+    2018 -> "AAC"
   )
 
+  /*
   val stockFullList = HashMap[Int, String](
     1 -> "CK Hutchison Holdings Ltd.",
     2 -> "CLP Holdings Limited",
@@ -262,6 +276,9 @@ object StockOption {
     6030 -> "CITIC Securities Co. Ltd.",
     6837 -> "Haitong Securities Co., Ltd."
   )
+  */
+
+  lazy val underlyingStock: List[Stock] = Stock.findBySEHKCodeList(stockAbbrList.keys.toList)
 
   val sqlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd")
 
@@ -318,6 +335,20 @@ object StockOption {
     }
   }
 
+  def findByOptionCodeWithHistory(optionCode: String, startDate: DateTime, endDate: DateTime): Option[(StockOption, List[StockOptionHistory])] = {
+    DB.withConnection{
+      implicit connection =>
+        val sql = SQL("""select a.id, a.ticker, a.name, b.id, b.symbol_id, b.price_date, b.open_price, b.high_price, b.low_price, b.close_price, b.open_interest, b.iv
+            from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
+            where instrument = 'HK Stock Option' and ticker = {optionCode} and and b.price_date >= {date1} and b.price_date <={date2}""")
+          .on("optionCode"-> optionCode, "date1"-> sqlDateTimeFormat.format(startDate.toDate()), "date2" -> sqlDateTimeFormat.format(endDate.toDate()))
+
+        val results: List[(StockOption, StockOptionHistory)] = sql.as(stockOptionHistoryParser *)
+
+        results.groupBy(_._1).mapValues(_.map {_._2}).headOption
+    }
+  }
+
   val dateTimeParser =
     date("price_date") map {
       case priceDate => new DateTime(priceDate.getTime())
@@ -339,9 +370,35 @@ object StockOption {
         results
     }
   }
+
+  def findLatestAvailableDateBySEHKCode(sehkCode: Int): Option[DateTime] ={
+    DB.withConnection{
+      implicit connection =>
+        val abbrev = stockAbbrList(sehkCode)
+        val abbrevLike = abbrev+"%"
+
+        val sql = SQL("""select max(b.price_date) as price_date
+            from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
+            where instrument = 'HK Stock Option' and ticker like {abbrev}""")
+          .on("abbrev" -> abbrevLike)
+
+        val result = sql.as(dateTimeParser *).headOption
+        result
+    }
+  }
 }
 
 object StockOptionHistory{
+
+  def apply(id:Long, stockOptionId: Long, priceDate: DateTime,
+    openPrice: Float, dailyHigh: Float, dailyLow: Float,
+    settlePrice: Float, openInterest: Long, iv: Float)
+    = new StockOptionHistory(id, stockOptionId, priceDate, openPrice, dailyHigh, dailyLow, settlePrice, openInterest, iv)
+
+  def unapply(history: StockOptionHistory): Option[(Long, Long, DateTime, Float, Float, Float, Float, Long, Float)] =
+    Some((history.id, history.stockOptionId, history.priceDate, history.openPrice, history.dailyHigh,
+          history.dailyLow, history.settlePrice, history.openInterest, history.iv))
+
   val stockOptionHistoryParser: RowParser[StockOptionHistory] = {
 
     long("id") ~ long("symbol_id") ~ date("price_date") ~
@@ -357,6 +414,9 @@ object StockOptionHistory{
 
 object Stock{
   val sqlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd")
+
+  def apply(id: Long, ticker: String, name: String) = new Stock(id, ticker, name)
+  def unapply(stock: Stock): Option[(Long, String, String)] = Some((stock.id, stock.ticker, stock.name))
 
   val stockParser: RowParser[Stock] = {
     long("id") ~ str("ticker") ~ str("name") map{
@@ -379,46 +439,88 @@ object Stock{
     }
   }
 
+  def findBySEHKCodeList(sehkCode: List[Int]): List[Stock] = {
+    DB.withConnection{
+      implicit connection =>
+        val ticker = convertToTicker(sehkCode)
+        val codeList = ticker.map(s => "'" + s + "'").mkString(",")
+        val sqlStr = s"select id, ticker, name from securities_master.symbol where instrument = 'Stock' and ticker in ($codeList)"
+        val sql = SQL(sqlStr)
+
+        sql.as(stockParser *)
+    }
+  }
+
   def findBySEHKCodeWithHistory(sehkCode: Int, date: DateTime): Option[(Stock, StockHistory)] = {
     DB.withConnection{
       implicit connection =>
         val ticker = convertToTicker(sehkCode)
         val sql = SQL("""select a.id, a.ticker, a.name, b.id, b.symbol_id, b.price_date, b.open_price, b.high_price, b.low_price, b.close_price, b.adj_close_price, b.volume
           from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
-          where instrument = 'Stock' and ticker = {ticker} and b.price_date={date}""")
-          .on("ticker"-> ticker, "date"-> sqlDateTimeFormat.format(date.toDate()))
+          where instrument = 'Stock' and ticker = {ticker} and b.price_date={date1}""")
+          .on("ticker"-> ticker, "date1"-> sqlDateTimeFormat.format(date.toDate))
 
         sql.as(stockHistoryParser *).headOption
     }
   }
 
+  //TODO: fuck
+  def findBySEHKCodeWithHistory(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[(Stock, List[StockHistory])] = {
+    DB.withConnection{
+      implicit connection =>
+        val ticker = convertToTicker(sehkCode)
+        val sql = SQL("""select a.id, a.ticker, a.name, b.id, b.symbol_id, b.price_date, b.open_price, b.high_price, b.low_price, b.close_price, b.adj_close_price, b.volume
+          from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
+          where instrument = 'Stock' and ticker = {ticker} and b.price_date>={date1} and b.price_date <={date2}""")
+          .on("ticker"-> ticker, "date1"-> sqlDateTimeFormat.format(startDate.toDate), "date2" -> sqlDateTimeFormat.format(endDate.toDate))
+
+        val results = sql.as(stockHistoryParser *)
+
+        results.groupBy(_._1).mapValues(_.map {_._2}).headOption
+    }
+  }
+
   val statisticParser =
-    date("start_date") ~ date("end_date") ~ get[java.math.BigDecimal]("min_price") ~ get[java.math.BigDecimal]("max_price") ~
+    int("sehkCode") ~ date("start_date") ~ date("end_date") ~ get[java.math.BigDecimal]("min_price") ~ get[java.math.BigDecimal]("max_price") ~
       get[java.math.BigDecimal]("mean_price") ~ get[java.math.BigDecimal]("mean_std") map {
-      case startDate ~ endDate ~ minPrice ~ maxPrice ~meanPrice ~ stdPrice =>
-        (new DateTime(startDate.getTime()), new DateTime(endDate.getTime()), minPrice.floatValue(), maxPrice.floatValue(), meanPrice.floatValue(), stdPrice.floatValue())
+      case sehkCode ~ startDate ~ endDate ~ minPrice ~ maxPrice ~meanPrice ~ stdPrice =>
+        new StockStatistic(sehkCode, new DateTime(startDate.getTime()), new DateTime(endDate.getTime()), minPrice.floatValue(), maxPrice.floatValue(), meanPrice.floatValue(), stdPrice.floatValue())
     }
 
-  def getStockStatistic(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[(DateTime, DateTime, Float, Float, Float, Float)]= {
+  def getStockStatistic(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[StockStatistic] = {
     DB.withConnection{
       implicit connection =>
         val ticker = convertToTicker(sehkCode)
         val sql = SQL(
-          """select min(b.price_date) as start_date, max(b.price_date) as end_date, min(b.adj_close_price) as min_price, max(b.adj_close_price) as max_price,
+          """select {sehkCode} as sehkCode, min(b.price_date) as start_date, max(b.price_date) as end_date, min(b.adj_close_price) as min_price, max(b.adj_close_price) as max_price,
           | avg(b.adj_close_price) as mean_price, stddev_samp(b.adj_close_price) as mean_std
           | from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
           | where instrument = 'Stock' and ticker = {ticker} and b.price_date between {startDate} and {endDate}
         """.stripMargin)
-          .on("ticker"-> ticker, "startDate"-> sqlDateTimeFormat.format(startDate.toDate), "endDate" -> sqlDateTimeFormat.format(endDate.toDate))
+          .on("ticker"-> ticker,
+            "sehkCode" -> sehkCode,
+            "startDate"-> sqlDateTimeFormat.format(startDate.toDate), "endDate" -> sqlDateTimeFormat.format(endDate.toDate))
 
         sql.as(statisticParser *).headOption
     }
   }
 
   def convertToTicker(sehkCode: Int) = "%04d".format(sehkCode) +".HK"
+
+  def convertToTicker(sehkCodeList: List[Int]) = sehkCodeList.map(x => "%04d".format(x) +".HK")
 }
 
 object StockHistory{
+
+  def apply(id:Long, stockOptionId: Long, priceDate: DateTime,
+            openPrice: Float, dailyHigh: Float, dailyLow: Float,
+            closePrice: Float, adjClosePrice: Float, volume: Long)
+  = new StockHistory(id, stockOptionId, priceDate, openPrice, dailyHigh, dailyLow, closePrice, adjClosePrice, volume)
+
+  def unapply(history: StockHistory): Option[(Long, Long, DateTime, Float, Float, Float, Float, Float, Long)] =
+    Some((history.id, history.stockId, history.priceDate, history.openPrice, history.dailyHigh,
+      history.dailyLow, history.closePrice, history.adjClosePrice, history.volume))
+
   val stockHistoryParser: RowParser[StockHistory] = {
 
     long("id") ~ long("symbol_id") ~ date("price_date") ~
@@ -434,6 +536,10 @@ object StockHistory{
 }
 
 object IVSeries{
+
+  def apply(id: Long, seriesName: String) = new IVSeries(id, seriesName)
+  def unapply(ivSeries: IVSeries): Option[(Long, String)] = Some((ivSeries.id, ivSeries.seriesName))
+
   val sqlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd")
 
   val ivSeriesParser: RowParser[IVSeries] = {
@@ -447,8 +553,9 @@ object IVSeries{
     ivSeriesParser ~ IVSeriesTimePoint.ivSeriesTimePointParser map (flatten)
   }
 
-  def findBySEHKCode(sehkCode: Int, date: DateTime) : Option[IVSeries]={
-    val assetName = StockOption.stockFullList.get(sehkCode)
+  def findBySEHKCode(sehkCode: Int) : Option[IVSeries]={
+    //val assetName = StockOption.stockFullList.get(sehkCode)
+    val assetName = StockOption.underlyingStock.filter(p => p.sehkCode == sehkCode).map(p => p.name).headOption
     assetName match{
       case Some(name) =>
         DB.withConnection{
@@ -464,18 +571,50 @@ object IVSeries{
     }
   }
 
-  def findBySEHKCodeWithTimePoint(sehkCode: Int, date: DateTime): Option[Map[IVSeries, List[IVSeriesTimePoint]]] ={
-    val assetName = StockOption.stockFullList.get(sehkCode)
+  def findBySEHKCodeWithTimePoint(sehkCode: Int): Option[Map[IVSeries, List[IVSeriesTimePoint]]] ={
+    findBySEHKCodeWithTimePoint(sehkCode, None, None)
+  }
+
+  def findBySEHKCodeWithTimePoint(sehkCode: Int, endDate: DateTime): Option[Map[IVSeries, List[IVSeriesTimePoint]]] ={
+    findBySEHKCodeWithTimePoint(sehkCode, None, Option(endDate))
+  }
+
+  def findBySEHKCodeWithTimePoint(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[Map[IVSeries, List[IVSeriesTimePoint]]] ={
+    findBySEHKCodeWithTimePoint(sehkCode, Option(startDate), Option(endDate))
+  }
+
+  def findBySEHKCodeWithTimePoint(sehkCode: Int, startDate: Option[DateTime], endDate: Option[DateTime])
+  : Option[Map[IVSeries, List[IVSeriesTimePoint]]] ={
+    val assetName = StockOption.underlyingStock.filter(p => p.sehkCode == sehkCode).map(p => p.name).headOption
     assetName match{
       case Some(name) =>
         DB.withConnection{
           implicit connection =>
             val nameLike = name+"%"
-            val sql = SQL(
-              """select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
-                | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
-                | where a.series_name like {name} and b.time_point_date <={date}""".stripMargin)
-              .on("name"-> nameLike, "date" -> sqlDateTimeFormat.format(date.toDate))
+
+            val sql =
+              (startDate, endDate) match{
+                case (Some(x), Some(y)) =>
+                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                    | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
+                    | where a.series_name like {name} and and b.time_point_date >={date1} and b.time_point_date <={date2}""".stripMargin)
+                    .on("name"-> nameLike, "date1" -> sqlDateTimeFormat.format(x.toDate), "date2" -> sqlDateTimeFormat.format(y.toDate))
+                case (None, Some(y)) =>
+                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                    | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
+                    | where a.series_name like {name} and b.time_point_date <={date}""".stripMargin)
+                  .on("name"-> nameLike, "date" -> sqlDateTimeFormat.format(y.toDate))
+                case (Some(x), None) =>
+                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                    | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
+                    | where a.series_name like {name} and b.time_point_date >={date}""".stripMargin)
+                    .on("name"-> nameLike, "date" -> sqlDateTimeFormat.format(x.toDate))
+                case (None, None) =>
+                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                        | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
+                        | where a.series_name like {name} """.stripMargin)
+                    .on("name"-> nameLike)
+              }
 
             val results: List[(IVSeries, IVSeriesTimePoint)] = sql.as(ivSeriesTimePointParser *)
 
@@ -487,6 +626,10 @@ object IVSeries{
 }
 
 object IVSeriesTimePoint{
+
+  def apply(id: Long, date: DateTime, value: Float) = new IVSeriesTimePoint(id, date, value)
+  def unapply(ivSeriesTP: IVSeriesTimePoint): Option[(Long, DateTime, Float)] = Some((ivSeriesTP.id, ivSeriesTP.date, ivSeriesTP.value))
+
   val ivSeriesTimePointParser: RowParser[IVSeriesTimePoint] = {
     long("time_point_id") ~ date("time_point_date") ~ get[java.math.BigDecimal]("value") map {
       case id ~ date ~ value =>{

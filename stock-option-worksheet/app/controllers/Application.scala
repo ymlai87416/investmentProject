@@ -25,7 +25,8 @@ object Application extends Controller {
   }
 
   def listByCode(sehkCode: Int) = Action {
-    val stockNameOpt: Option[String] = StockOption.stockFullList.get(sehkCode)
+    val stockNameOpt: Option[String]
+      = StockOption.underlyingStock.filter(p => p.sehkCode == sehkCode).map(x => x.name).headOption
     val stockOptionsOpt = StockOption.findBySEHKCode(sehkCode);
 
     (stockNameOpt, stockOptionsOpt) match{
@@ -56,7 +57,7 @@ object Application extends Controller {
             if (dataType == "openInterest") _._2.openInterest else _._2.settlePrice
           }.head)
 
-        val stat = new Statistic(statRaw._1, statRaw._2, statRaw._3, statRaw._4, statRaw._5, statRaw._6)
+        val stat = new Statistic(statRaw.startDate, statRaw.endDate, statRaw.minPice, statRaw.maxPrice, statRaw.meanPrice, statRaw.stdPrice)
 
         Ok(views.html.optionview(stock, stockHistory, date, stat, expriyDays, strikePrices, infoMap, dataType))
       }
