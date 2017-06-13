@@ -120,7 +120,7 @@ object ApplicationRestful extends Controller{
   */
 
 
-  val format = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss")
+  val format = DateTimeFormat.forPattern("yyyy-MM-dd")
 
   def parseDate(param: Option[String]): Option[DateTime] ={
     param match {
@@ -181,7 +181,7 @@ object ApplicationRestful extends Controller{
     val date2Opt: Option[DateTime] = parseDate(request.getQueryString("date2"))
 
     val start: DateTime = date1Opt.getOrElse(DateTime.now.minusYears(1))
-    val end: DateTime = date1Opt.getOrElse(DateTime.now)
+    val end: DateTime = date2Opt.getOrElse(DateTime.now)
 
     val result = StockOption.findByOptionCodeWithHistory(optionCode, start, end)
     result match{
@@ -204,7 +204,7 @@ object ApplicationRestful extends Controller{
     val date2Opt: Option[DateTime] = parseDate(request.getQueryString("date2"))
 
     val start: DateTime = date1Opt.getOrElse(DateTime.now.minusYears(1))
-    val end: DateTime = date1Opt.getOrElse(DateTime.now)
+    val end: DateTime = date2Opt.getOrElse(DateTime.now)
 
     val result = IVSeries.findBySEHKCodeWithTimePoint(sehkCode, start, end)
 

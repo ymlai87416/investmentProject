@@ -31,6 +31,13 @@ class Stock(id: Long, ticker: String, name: String) extends Asset(id, ticker, na
       case _: Exception => None
     }
   }
+
+  override def equals(o: Any) = o match{
+    case that: Stock => that.id == this.id
+    case _ => false
+  }
+
+  override def hashCode = this.id.hashCode();
 }
 
 class StockOption(id: Long, ticker: String, name: String) extends Asset(id, ticker, name){
@@ -47,6 +54,13 @@ class StockOption(id: Long, ticker: String, name: String) extends Asset(id, tick
     val input = ticker.substring(ticker.length()-5)
     DateTime.parse(input, StockOption.dt)
   }
+
+  override def equals(o: Any) = o match{
+    case that: StockOption => that.id == this.id
+    case _ => false
+  }
+
+  override def hashCode = this.id.hashCode();
 }
 
 class StockOptionHistory(val id:Long, val stockOptionId: Long, val priceDate: DateTime,
@@ -189,101 +203,12 @@ object StockOption {
     2018 -> "AAC"
   )
 
-  /*
-  val stockFullList = HashMap[Int, String](
-    1 -> "CK Hutchison Holdings Ltd.",
-    2 -> "CLP Holdings Limited",
-    3 -> "The Hong Kong and China Gas Company Limited",
-    4 -> "The Wharf (Holdings) Limited",
-    5 -> "HSBC Holdings Plc.",
-    6 -> "Power Assets Holdings Limited",
-    11 -> "Hang Seng Bank Limited",
-    12 -> "Henderson Land Development Company Limited",
-    16 -> "Sun Hung Kai Properties Limited",
-    17 -> "New World Development Company Limited",
-    19 -> "Swire Pacific Limited",
-    23 -> "The Bank of East Asia, Limited",
-    27 -> "Galaxy Entertainment Group Limited",
-    66 -> "MTR Corporation Limited",
-    135 -> "Kunlun Energy Co. Ltd.",
-    151 -> "Want Want China Holdings Ltd.",
-    267 -> "CITIC Limited",
-    293 -> "Cathay Pacific Airways Limited",
-    330 -> "Esprit Holdings Limited",
-    358 -> "Jiangxi Copper Company Limited",
-    386 -> "China Petroleum & Chemical Corporation",
-    388 -> "Hong Kong Exchanges and Clearing Limited",
-    390 -> "China Railway Group Limited",
-    489 -> "Dongfeng Motor Group Co. Ltd.",
-    494 -> "Li & Fung Limited",
-    688 -> "China Overseas Land & Investment Limited",
-    700 -> "Tencent Holdings Limited",
-    728 -> "China Telecom Corporation Limited",
-    762 -> "China Unicom (Hong Kong) Limited",
-    857 -> "PetroChina Company Limited",
-    883 -> "CNOOC Limited",
-    902 -> "Huaneng Power International, Inc.",
-    914 -> "Anhui Conch Cement Company Limited",
-    939 -> "China Construction Bank Corporation",
-    941 -> "China Mobile Limited",
-    992 -> "Lenovo Group Limited",
-    998 -> "China CITIC Bank Corporation Limited",
-    1044 -> "Hengan International Group Co. Ltd.",
-    1088 -> "China Shenhua Energy Company Limited",
-    1109 -> "China Resources Land Ltd.",
-    1171 -> "Yanzhou Coal Mining Company Limited",
-    1186 -> "China Railway Construction Corporation Limited",
-    1211 -> "BYD Company Limited",
-    1398 -> "Industrial and Commercial Bank of China Limited",
-    1800 -> "China Communications Construction Company Limited",
-    1880 -> "Belle International Holdings Limited",
-    1898 -> "China Coal Energy Company Limited",
-    1919 -> "China COSCO Holdings Company Limited",
-    1928 -> "Sands China Ltd.",
-    2038 -> "FIH Mobile Limited",
-    2282 -> "MGM China Holdings Limited",
-    2318 -> "Ping An Insurance (Group) Company of China, Ltd.",
-    2319 -> "China Mengniu Dairy Co. Ltd.",
-    2328 -> "PICC Property and Casualty Company Limited",
-    2333 -> "Great Wall Motor Co. Limited",
-    2388 -> "BOC Hong Kong (Holdings) Limited",
-    2600 -> "Aluminum Corporation of China Limited",
-    2628 -> "China Life Insurance Company Limited",
-    2777 -> "Guangzhou R&F Properties Co., Ltd.",
-    2800 -> "Tracker Fund of Hong Kong",
-    2888 -> "Standard Chartered PLC",
-    2899 -> "Zijin Mining Group Company Limited",
-    3323 -> "China National Building Material Company Limited",
-    3328 -> "Bank of Communications Co., Ltd.",
-    3888 -> "Kingsoft Corporation Ltd.",
-    3968 -> "China Merchants Bank Co., Ltd.",
-    3988 -> "Bank of China Limited",
-    1113 -> "Cheung Kong Property Holdings Ltd.",
-    1288 -> "Agricultural Bank of China Limited ",
-    1299 -> "AIA Group Limited",
-    1336 -> "New China Life Insurance Co. Ltd.",
-    1339 -> "The People's Insurance Company (Group) of China Limited",
-    1359 -> "China Cinda Asset Management Co., Ltd",
-    1816 -> "CGN Power Co., Ltd",
-    1988 -> "China Minsheng Banking Corporation Limited",
-    2601 -> "China Pacific Insurance (Group) Co., Ltd.",
-    2822 -> "CSOP FTSE China A50 ETF ",
-    2823 -> "iShares FTSE A50 China Index ETF#",
-    2827 -> "W.I.S.E. - CSI 300 China Tracker #",
-    2828 -> "Hang Seng H-Share Index ETF",
-    3188 -> "ChinaAMC CSI 300 Index ETF ",
-    3800 -> "GCL-Poly Energy Holdings Ltd.",
-    6030 -> "CITIC Securities Co. Ltd.",
-    6837 -> "Haitong Securities Co., Ltd."
-  )
-  */
-
   lazy val underlyingStock: List[Stock] = Stock.findBySEHKCodeList(stockAbbrList.keys.toList)
 
   val sqlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd")
 
   val stockOptionParser: RowParser[StockOption] = {
-    long("id") ~ str("ticker") ~ str("name") map{
+    long("symbol.id") ~ str("symbol.ticker") ~ str("symbol.name") map{
       case id ~ ticker ~ name =>
         new StockOption(id, ticker, name)
     }
@@ -340,7 +265,7 @@ object StockOption {
       implicit connection =>
         val sql = SQL("""select a.id, a.ticker, a.name, b.id, b.symbol_id, b.price_date, b.open_price, b.high_price, b.low_price, b.close_price, b.open_interest, b.iv
             from securities_master.symbol a inner join securities_master.daily_price b on (a.id = b.symbol_id)
-            where instrument = 'HK Stock Option' and ticker = {optionCode} and and b.price_date >= {date1} and b.price_date <={date2}""")
+            where instrument = 'HK Stock Option' and ticker = {optionCode} and b.price_date >= {date1} and b.price_date <={date2}""")
           .on("optionCode"-> optionCode, "date1"-> sqlDateTimeFormat.format(startDate.toDate()), "date2" -> sqlDateTimeFormat.format(endDate.toDate()))
 
         val results: List[(StockOption, StockOptionHistory)] = sql.as(stockOptionHistoryParser *)
@@ -401,9 +326,9 @@ object StockOptionHistory{
 
   val stockOptionHistoryParser: RowParser[StockOptionHistory] = {
 
-    long("id") ~ long("symbol_id") ~ date("price_date") ~
-      get[java.math.BigDecimal]("open_price") ~ get[java.math.BigDecimal]("high_price") ~
-      get[java.math.BigDecimal]("low_price") ~ get[java.math.BigDecimal]("close_price") ~ long("open_interest") ~ get[java.math.BigDecimal]("iv") map {
+    long("daily_price.id") ~ long("daily_price.symbol_id") ~ date("daily_price.price_date") ~
+      get[java.math.BigDecimal]("daily_price.open_price") ~ get[java.math.BigDecimal]("daily_price.high_price") ~
+      get[java.math.BigDecimal]("daily_price.low_price") ~ get[java.math.BigDecimal]("daily_price.close_price") ~ long("daily_price.open_interest") ~ get[java.math.BigDecimal]("daily_price.iv") map {
       case id ~ symbolId ~ priceDate ~ openPrice ~ dailyHigh ~ dailyLow ~ settlePrice ~ openInterest ~ iv =>{
         val priceDateJoda = new DateTime(priceDate.getTime())
         new StockOptionHistory(id, symbolId, priceDateJoda, openPrice.floatValue(), dailyHigh.floatValue(), dailyLow.floatValue(), settlePrice.floatValue(), openInterest, iv.floatValue())
@@ -419,7 +344,7 @@ object Stock{
   def unapply(stock: Stock): Option[(Long, String, String)] = Some((stock.id, stock.ticker, stock.name))
 
   val stockParser: RowParser[Stock] = {
-    long("id") ~ str("ticker") ~ str("name") map{
+    long("symbol.id") ~ str("symbol.ticker") ~ str("symbol.name") map{
       case id ~ ticker ~ name =>
         new Stock(id, ticker, name)
     }
@@ -464,7 +389,6 @@ object Stock{
     }
   }
 
-  //TODO: fuck
   def findBySEHKCodeWithHistory(sehkCode: Int, startDate: DateTime, endDate: DateTime): Option[(Stock, List[StockHistory])] = {
     DB.withConnection{
       implicit connection =>
@@ -523,9 +447,10 @@ object StockHistory{
 
   val stockHistoryParser: RowParser[StockHistory] = {
 
-    long("id") ~ long("symbol_id") ~ date("price_date") ~
-      get[java.math.BigDecimal]("open_price") ~ get[java.math.BigDecimal]("high_price") ~
-      get[java.math.BigDecimal]("low_price") ~ get[java.math.BigDecimal]("close_price") ~ get[java.math.BigDecimal]("adj_close_price") ~ long("volume") map {
+    long("daily_price.id") ~ long("daily_price.symbol_id") ~ date("daily_price.price_date") ~
+      get[java.math.BigDecimal]("daily_price.open_price") ~ get[java.math.BigDecimal]("daily_price.high_price") ~
+      get[java.math.BigDecimal]("daily_price.low_price") ~ get[java.math.BigDecimal]("daily_price.close_price") ~
+      get[java.math.BigDecimal]("daily_price.adj_close_price") ~ long("daily_price.volume") map {
       case id ~ symbolId ~ priceDate ~ openPrice ~ dailyHigh ~ dailyLow ~ closePrice ~ adjClosePrice ~ volume =>{
         val priceDateJoda = new DateTime(priceDate.getTime())
         new StockHistory(id, symbolId, priceDateJoda, openPrice.floatValue(), dailyHigh.floatValue(),
@@ -543,7 +468,7 @@ object IVSeries{
   val sqlDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd")
 
   val ivSeriesParser: RowParser[IVSeries] = {
-    long("id") ~ str("series_name") map{
+    long("time_series.id") ~ str("time_series.series_name") map{
       case id ~ name =>
         new IVSeries(id, name)
     }
@@ -583,9 +508,100 @@ object IVSeries{
     findBySEHKCodeWithTimePoint(sehkCode, Option(startDate), Option(endDate))
   }
 
+  val sehk2IvName = HashMap[Int, String](
+    1 -> "Cheung Kong (Holdings) Limited",
+    2 -> "CLP Holdings Limited",
+    3 -> "The Hong Kong and China Gas Company Limited",
+    4 -> "The Wharf (Holdings) Limited",
+    5 -> "HSBC Holdings Plc.",
+    6 -> "Power Assets Holdings Limited",
+    11 -> "Hang Seng Bank Limited",
+    12 -> "Henderson Land Development Company Limited",
+    16 -> "Sun Hung Kai Properties Limited",
+    17 -> "New World Development Company Limited",
+    19 -> "Swire Pacific Limited 'A'",
+    23 -> "The Bank of East Asia, Limited",
+    27 -> "Galaxy Entertainment Group Limited",
+    66 -> "MTR Corporation Limited",
+    135 -> "Kunlun Energy Co. Ltd.",
+    151 -> "Want Want China Holdings Ltd.",
+    175 -> "Geely Automobile Holdings Ltd.",
+    267 -> "CITIC Pacific Limited",
+    293 -> "Cathay Pacific Airways Limited",
+    330 -> "Esprit Holdings Limited",
+    358 -> "Jiangxi Copper Company Limited",
+    386 -> "China Petroleum & Chemical Corporation",
+    388 -> "Hong Kong Exchanges and Clearing Limited",
+    390 -> "China Railway Group Limited",
+    489 -> "Dongfeng Motor Group Co. Ltd.",
+    494 -> "Li & Fung Limited",
+    688 -> "China Overseas Land & Investment Limited",
+    700 -> "Tencent Holdings Limited",
+    728 -> "China Telecom Corporation Limited",
+    762 -> "China Unicom (Hong Kong) Limited",
+    823 -> "Link Real Estate Investment Trust",
+    857 -> "PetroChina Company Limited",
+    883 -> "CNOOC Limited",
+    902 -> "Huaneng Power International, Inc.",
+    914 -> "Anhui Conch Cement Company Limited",
+    939 -> "China Construction Bank Corporation",
+    941 -> "China Mobile Limited",
+    992 -> "Lenovo Group Limited",
+    998 -> "China CITIC Bank Corporation Limited",
+    1044 -> "Hengan International Group Co. Ltd.",
+    1088 -> "China Shenhua Energy Company Limited",
+    1109 -> "China Resources Land Ltd.",
+    1113 -> "Cheung Kong Property Holdings Ltd.",
+    1171 -> "Yanzhou Coal Mining Company Limited",
+    1186 -> "China Railway Construction Corporation Limited",
+    1211 -> "BYD Company Limited",
+    1288 -> "Agricultural Bank of China Limited",
+    1299 -> "AIA Group Limited",
+    1336 -> "New China Life Insurance Co. Ltd.",
+    1339 -> "Peoples Insurance Company (Group) of China Ltd.",
+    1359 -> "China Cinda Asset Management Co., Ltd",
+    1398 -> "Industrial and Commercial Bank of China Limited",
+    1800 -> "China Communications Construction Company Limited",
+    1816 -> "CGN Power Co., Ltd.",
+    1880 -> "Belle International Holdings Limited",
+    1898 -> "China Coal Energy Company Limited",
+    1919 -> "China COSCO Holdings Company Limited",
+    1928 -> "Sands China Ltd.",
+    1988 -> "China Minsheng Banking Corporation Ltd.",
+    2018 -> "AAC Technologies Holdings Inc.",
+    2038 -> "Foxconn International Holdings Limited",
+    2282 -> "MGM China Holdings Limited",
+    2318 -> "Ping An Insurance (Group) Company of China, Ltd.",
+    2319 -> "China Mengniu Dairy Co. Ltd.",
+    2328 -> "PICC Property and Casualty Company Limited",
+    2333 -> "Great Wall Motor Company Ltd",
+    2388 -> "BOC Hong Kong (Holdings) Limited",
+    2600 -> "Aluminum Corporation of China Limited",
+    2601 -> "China Pacific Insurance (Group) Company Limited",
+    2628 -> "China Life Insurance Company Limited",
+    2777 -> "Guangzhou R&F Properties Co., Ltd.",
+    2800 -> "Tracker Fund",
+    2822 -> "CSOP FTSE China A50 ETF",
+    2823 -> "iShares FTSE A50 China Index ETF",
+    2827 -> "W.I.S.E. CSI 300 China Tracker",
+    2828 -> "Hang Seng H-Share Index ETF",
+    2888 -> "Standard Chartered PLC",
+    2899 -> "Zijin Mining Group Company Limited",
+    3188 -> "ChinaAMC CSI 300 Index ETF",
+    3323 -> "China National Building Material Company Limited",
+    3328 -> "Bank of Communications Co., Ltd.",
+    3800 -> "GCL-Poly Energy Holdings Ltd.",
+    3888 -> "Kingsoft Corporation Ltd.",
+    3968 -> "China Merchants Bank Co., Ltd.",
+    3988 -> "Bank of China Limited",
+    6030 -> "CITIC Securities Co. Ltd.",
+    6837 -> "Haitong Securities Co., Ltd."
+  )
+
   def findBySEHKCodeWithTimePoint(sehkCode: Int, startDate: Option[DateTime], endDate: Option[DateTime])
   : Option[Map[IVSeries, List[IVSeriesTimePoint]]] ={
-    val assetName = StockOption.underlyingStock.filter(p => p.sehkCode == sehkCode).map(p => p.name).headOption
+    //val assetName = StockOption.underlyingStock.filter(p => p.sehkCode == Some(sehkCode)).map(p => p.name).headOption
+    val assetName = Option(sehk2IvName(sehkCode))
     assetName match{
       case Some(name) =>
         DB.withConnection{
@@ -595,22 +611,22 @@ object IVSeries{
             val sql =
               (startDate, endDate) match{
                 case (Some(x), Some(y)) =>
-                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                  SQL("""select a.id, a.series_name, b.id, b.time_point_date, b.value
                     | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
-                    | where a.series_name like {name} and and b.time_point_date >={date1} and b.time_point_date <={date2}""".stripMargin)
+                    | where a.series_name like {name} and b.time_point_date >={date1} and b.time_point_date <={date2}""".stripMargin)
                     .on("name"-> nameLike, "date1" -> sqlDateTimeFormat.format(x.toDate), "date2" -> sqlDateTimeFormat.format(y.toDate))
                 case (None, Some(y)) =>
-                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                  SQL("""select a.id, a.series_name, b.id, b.time_point_date, b.value
                     | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
                     | where a.series_name like {name} and b.time_point_date <={date}""".stripMargin)
                   .on("name"-> nameLike, "date" -> sqlDateTimeFormat.format(y.toDate))
                 case (Some(x), None) =>
-                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                  SQL("""select a.id, a.series_name, b.id, b.time_point_date, b.value
                     | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
                     | where a.series_name like {name} and b.time_point_date >={date}""".stripMargin)
                     .on("name"-> nameLike, "date" -> sqlDateTimeFormat.format(x.toDate))
                 case (None, None) =>
-                  SQL("""select a.id, a.series_name, b.id as time_point_id, b.time_point_date, b.value
+                  SQL("""select a.id, a.series_name, b.id, b.time_point_date, b.value
                         | from securities_master.time_series a inner join securities_master.time_point b on (a.id = b.series_id)
                         | where a.series_name like {name} """.stripMargin)
                     .on("name"-> nameLike)
@@ -631,7 +647,7 @@ object IVSeriesTimePoint{
   def unapply(ivSeriesTP: IVSeriesTimePoint): Option[(Long, DateTime, Float)] = Some((ivSeriesTP.id, ivSeriesTP.date, ivSeriesTP.value))
 
   val ivSeriesTimePointParser: RowParser[IVSeriesTimePoint] = {
-    long("time_point_id") ~ date("time_point_date") ~ get[java.math.BigDecimal]("value") map {
+    long("time_point.id") ~ date("time_point.time_point_date") ~ get[java.math.BigDecimal]("value") map {
       case id ~ date ~ value =>{
         val dateJoda = new DateTime(date.getTime())
         new IVSeriesTimePoint(id, dateJoda, value.floatValue())
