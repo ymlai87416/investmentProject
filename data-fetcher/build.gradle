@@ -59,7 +59,7 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-tx', version: '4.3.3.RELEASE'
     compile 'org.hibernate:hibernate-core:5.2.3.Final'
     compile 'org.jsoup:jsoup:1.9.1'
-    compile group: 'com.yahoofinance-api', name: 'YahooFinanceAPI', version: '3.7.0'
+    compile group: 'com.yahoofinance-api', name: 'YahooFinanceAPI', version: '3.12.3'
     compile 'org.hibernate:hibernate-entitymanager:5.2.3.Final'
     compile 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'

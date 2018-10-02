@@ -72,7 +72,7 @@ public class SymbolServiceImpl implements SymbolService {
             criteriaList.add(predicate);
         }
         if(symbol.getTicker() != null) {
-            predicate = cb.equal(e.get("ticker"), symbol.getTicker());
+            predicate = cb.like(e.get("ticker"), symbol.getTicker());
             criteriaList.add(predicate);
         }
         if(symbol.getInstrument() != null) {
