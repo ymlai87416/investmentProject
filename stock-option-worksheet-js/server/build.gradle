@@ -1,0 +1,45 @@
+buildscript {
+    ext {
+        springBootVersion = '2.0.5.RELEASE'
+    }
+    repositories {
+        maven { url "http://repo.spring.io/milestone" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+
+
+group = 'com.ymlai87416.stockoption'
+version = '0.0.1-SNAPSHOT'
+description = """server"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+
+
+repositories {
+    maven { url "http://repo.spring.io/milestone" }
+    mavenCentral()
+}
+dependencies {
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version:'2.0.5.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version:'2.0.5.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-rest', version:'2.0.5.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web-services', version:'2.0.5.RELEASE'
+    compile group: 'de.codecentric', name: 'spring-boot-admin-starter-client', version:'2.0.3'
+    compile group: 'de.codecentric', name: 'spring-boot-admin-starter-server', version:'2.0.3'
+    runtime group: 'mysql', name: 'mysql-connector-java', version:'5.1.47'
+    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version:'2.0.5.RELEASE'
+}

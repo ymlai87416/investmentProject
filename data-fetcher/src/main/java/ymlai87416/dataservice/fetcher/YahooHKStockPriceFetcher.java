@@ -244,6 +244,12 @@ public class YahooHKStockPriceFetcher implements Fetcher{
             dailyPrice.setPriceDate(Utilities.convertUtilDateToSqlDate(quote.getDate().getTime()));
             dailyPrice.setCreatedDate(Utilities.getCurrentSQLDateTime());
             dailyPrice.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
+
+            //handle garbage
+            if(quote.getOpen() == null || quote.getHigh() == null ||
+                    quote.getLow() == null || quote.getClose() == null || quote.getAdjClose() == null)
+                continue;
+
             dailyPrice.setOpenPrice(quote.getOpen().doubleValue());
             dailyPrice.setHighPrice(quote.getHigh().doubleValue());
             dailyPrice.setLowPrice(quote.getLow().doubleValue());
