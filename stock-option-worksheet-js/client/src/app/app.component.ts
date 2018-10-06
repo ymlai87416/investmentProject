@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { ScreenDef } from './screen.model';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +8,10 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'client';
+  title = 'Toxic lab stock option analyser';
+
+  constructor(
+    private router: Router,
+    @Inject('ScreenDefs') public examples: ScreenDef[]) {
+  }
 }
