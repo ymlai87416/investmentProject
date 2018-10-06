@@ -8,6 +8,12 @@ public class IVSeriesTimePoint {
     private Date date;
     private Float value;
 
+    public IVSeriesTimePoint(Long id, Date date, Float value){
+        this.id = id;
+        this.date = date;
+        this.value = value;
+    }
+
     public Long getId() {
         return id;
     }

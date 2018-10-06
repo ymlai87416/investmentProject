@@ -6,12 +6,25 @@ public class StockHistory {
     private Long id;
     private Long stockId;
     private Date priceDate;
-    private Float openPrice;
-    private Float dailyHigh;
-    private Float dailyLow;
-    private Float closePrice;
-    private Float adjClosePrice;
+    private Double openPrice;
+    private Double dailyHigh;
+    private Double dailyLow;
+    private Double closePrice;
+    private Double adjClosePrice;
     private Long volume;
+
+    public StockHistory(Long id, Long stockId, Date priceDate, Double openPrice, Double dailyHigh,
+                        Double dailyLow, Double closePrice, Double adjClosePrice, Long volume){
+        this.id = id;
+        this.stockId = stockId;
+        this.priceDate = priceDate;
+        this.openPrice = openPrice;
+        this.dailyHigh = dailyHigh;
+        this.dailyLow = dailyLow;
+        this.closePrice = closePrice;
+        this.adjClosePrice = adjClosePrice;
+        this.volume = volume;
+    }
 
     public Long getId() {
         return id;
@@ -37,43 +50,43 @@ public class StockHistory {
         this.priceDate = priceDate;
     }
 
-    public Float getOpenPrice() {
+    public Double getOpenPrice() {
         return openPrice;
     }
 
-    public void setOpenPrice(Float openPrice) {
+    public void setOpenPrice(Double openPrice) {
         this.openPrice = openPrice;
     }
 
-    public Float getDailyHigh() {
+    public Double getDailyHigh() {
         return dailyHigh;
     }
 
-    public void setDailyHigh(Float dailyHigh) {
+    public void setDailyHigh(Double dailyHigh) {
         this.dailyHigh = dailyHigh;
     }
 
-    public Float getDailyLow() {
+    public Double getDailyLow() {
         return dailyLow;
     }
 
-    public void setDailyLow(Float dailyLow) {
+    public void setDailyLow(Double dailyLow) {
         this.dailyLow = dailyLow;
     }
 
-    public Float getClosePrice() {
+    public Double getClosePrice() {
         return closePrice;
     }
 
-    public void setClosePrice(Float closePrice) {
+    public void setClosePrice(Double closePrice) {
         this.closePrice = closePrice;
     }
 
-    public Float getAdjClosePrice() {
+    public Double getAdjClosePrice() {
         return adjClosePrice;
     }
 
-    public void setAdjClosePrice(Float adjClosePrice) {
+    public void setAdjClosePrice(Double adjClosePrice) {
         this.adjClosePrice = adjClosePrice;
     }
 

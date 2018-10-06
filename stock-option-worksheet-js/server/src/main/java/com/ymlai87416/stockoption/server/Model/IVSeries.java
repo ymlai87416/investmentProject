@@ -1,9 +1,41 @@
 package com.ymlai87416.stockoption.server.model;
 
+import java.util.List;
+
 public class IVSeries {
 
     private Long id;
     private String seriesName;
+    private List<IVSeriesTimePoint> timePointList;
+
+    public IVSeries(Long id, String seriesName){
+        this.id = id;
+        this.seriesName = seriesName;
+    }
+
+    public List<IVSeriesTimePoint> getTimePointList(){
+        return timePointList;
+    }
+
+    public void setTimePointList(List<IVSeriesTimePoint> value){
+        timePointList = value;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getSeriesName() {
+        return seriesName;
+    }
+
+    public void setSeriesName(String seriesName) {
+        this.seriesName = seriesName;
+    }
 
     private String getAsset(){
         return seriesName.replace("  IV (%)", "")

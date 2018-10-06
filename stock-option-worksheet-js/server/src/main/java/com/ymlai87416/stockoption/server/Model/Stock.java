@@ -1,11 +1,22 @@
 package com.ymlai87416.stockoption.server.model;
 
+import java.util.List;
 import java.util.Optional;
 
 public class Stock extends Asset{
 
     public Stock(Long id, String ticker, String name) {
         super(id, ticker, name);
+    }
+
+    private List<StockHistory> historyList;
+
+    public List<StockHistory> getHistoryList(){
+        return historyList;
+    }
+
+    public void setHistoryList(List<StockHistory> value){
+        historyList = value;
     }
 
     public Optional<Long> getSehkCode(){

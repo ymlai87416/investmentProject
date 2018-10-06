@@ -12,6 +12,16 @@ public class StockStatistic {
     private Float meanPrice;
     private Float stdPrice;
 
+    public StockStatistic(Long stockId, Date startDate, Date endDate, Float minPrice, Float maxPrice, Float meanPrice, Float stdPrice){
+        this.stockId = stockId;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+        this.meanPrice = meanPrice;
+        this.stdPrice = stdPrice;
+    }
+
     public Long getStockId() {
         return stockId;
     }

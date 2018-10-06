@@ -1,13 +1,13 @@
 package com.ymlai87416.stockoption.server.utilities;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Created by Tom on 6/10/2016.
  */
 public class Utilities {
-
-
 
     public static java.util.Date convertSQLDateToUtilDate(java.sql.Date sqlDate){
         java.util.Date utilDate = new java.util.Date(sqlDate.getTime());
@@ -35,5 +35,26 @@ public class Utilities {
         cal.setTime(date);
         cal.add( Calendar.DATE, 1 );
         return cal.getTime();
+    }
+
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+
+    public static Date[] parseStartDateAndEndDate(String startDate, String endDate){
+        Date[] result = new Date[2];
+        try {
+            if (startDate != null) {
+                result[0] = sdf.parse(startDate);
+                if (endDate == null) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(result[0]);
+                    cal.add(Calendar.DATE, 0);
+                    result[1] = cal.getTime();
+                }
+            }
+
+            return result;
+        } catch (Exception ex) {
+            return new Date[0];
+        }
     }
 }

@@ -2,15 +2,27 @@ package com.ymlai87416.stockoption.server.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 public class StockOption extends Asset{
+
+    private List<StockOptionHistory> historyList;
 
     public StockOption(Long id, String ticker, String name) {
         super(id, ticker, name);
     }
 
-    static SimpleDateFormat dateFormat = new SimpleDateFormat("MMMYY");
+    public List<StockOptionHistory> getHistoryList(){
+        return this.historyList;
+    }
+
+    public void setHistoryList(List<StockOptionHistory> value){
+        this.historyList = value;
+    }
+
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("MMMyy", Locale.US);
 
     public char getOptionType(){
         return ticker.charAt(3);

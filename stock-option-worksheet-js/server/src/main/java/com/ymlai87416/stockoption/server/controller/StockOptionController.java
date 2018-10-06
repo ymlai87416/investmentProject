@@ -6,9 +6,15 @@ import com.ymlai87416.stockoption.server.domain.Symbol;
 import com.ymlai87416.stockoption.server.model.StockOption;
 import com.ymlai87416.stockoption.server.model.StockOptionHistory;
 import com.ymlai87416.stockoption.server.service.*;
+import com.ymlai87416.stockoption.server.utilities.Utilities;
+import org.hibernate.dialect.Sybase11Dialect;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.web.bind.annotation.*;
 
+import javax.rmi.CORBA.Util;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,19 +31,21 @@ public class StockOptionController {
      * getAllStockOptionUnderlyingAsset     : /stockOption/underlyingAsset
      */
 
-    private SymbolService symbolService;
-    private DailyPriceService dailyPriceService;
-    private StockOptionUnderlyingAssetService stockOptionUnderlyingAssetService;
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    private SymbolRepository symbolRepository;
+    private DailyPriceRepository dailyPriceRepository;
+    private StockOptionUnderlyingAssetRepository stockOptionUnderlyingAssetRepository;
     List<StockOptionUnderlyingAsset> underlyingAssetsList;
 
     @Autowired
-    private StockOptionController(DailyPriceService dailyPriceService,
-                                 SymbolService symbolService, StockOptionUnderlyingAssetService stockOptionUnderlyingAssetService
+    private StockOptionController(SymbolRepository symbolRepository,
+                                  DailyPriceRepository dailyPriceRepository,
+                                  StockOptionUnderlyingAssetRepository stockOptionUnderlyingAssetRepository
     ){
-        this.dailyPriceService = dailyPriceService;
-        this.symbolService = symbolService;
-        this.stockOptionUnderlyingAssetService = stockOptionUnderlyingAssetService;
-        underlyingAssetsList = this.stockOptionUnderlyingAssetService.listAllStockOptionUnderlyingAsset();
+        this.symbolRepository = symbolRepository;
+        this.dailyPriceRepository = dailyPriceRepository;
+        this.stockOptionUnderlyingAssetRepository = stockOptionUnderlyingAssetRepository;
+        underlyingAssetsList = this.stockOptionUnderlyingAssetRepository.findAll();
     }
 
     private boolean tickerMatch(String tickerStr, int tickerNum){
@@ -52,38 +60,112 @@ public class StockOptionController {
 
     @RequestMapping("/stockOption/sehk/{id}")
     @CrossOrigin(origins="http://localhost:4200")
-    public List<StockOption> findStockOptionBySEHKCode(@PathVariable String id) throws Exception
-    {
+    public List<StockOption> findStockOptionBySEHKCode(@PathVariable String id,
+                                                       @RequestParam(value="startDate", required=false) String startDate,
+                                                       @RequestParam(value="endDate", required=false) String endDate) throws Exception {
         try {
             int tickerNum = Integer.parseInt(id);
             Optional<StockOptionUnderlyingAsset> asset = underlyingAssetsList.stream().filter(x -> tickerMatch(x.getTicker(), tickerNum)).findFirst();
 
-            if(asset.isPresent()) {
-                Symbol example = new Symbol();
-                example.setInstrument("HK Stock Option");
-                example.setTicker(asset.get().getShortForm() + "%");
-                return symbolService.searchSymbol(example, true);
-            }
-            else
+            if (asset.isPresent()) {
+                /*
+                Symbol symbol = new Symbol();
+                symbol.setInstrument("HK Stock Option");
+                symbol.setTicker(asset.get().getShortForm());
+
+                ExampleMatcher matcher = ExampleMatcher.matching()
+                        .withMatcher("Instrument", x -> x.exact())
+                        .withMatcher("Ticker", x -> x.contains());
+
+                Example<Symbol> example  = Example.of(symbol, matcher);
+                List<Symbol> searchResult = symbolRepository.findAll(example);
+                */
+                List<Symbol> searchResult = null;
+                List<DailyPrice> childSearchResult = null;
+                String tickerPattern = asset.get().getShortForm() + "%";
+
+                Date[] startEndDate = Utilities.parseStartDateAndEndDate(startDate, endDate);
+
+                boolean initChild = false;
+                if(startEndDate != null && startEndDate.length == 2
+                        && startEndDate[0] != null && startEndDate[1] != null){
+                    searchResult = symbolRepository.findByInstrumentEqualsAndTickerLikeAndDailyPriceListPriceDateBetween
+                            ("HK Stock Option", tickerPattern, startEndDate[0], startEndDate[1]);
+
+                    childSearchResult = dailyPriceRepository.findBySymbolInAndPriceDateBetween(searchResult,
+                            startEndDate[0], startEndDate[1]);
+
+                    for(Symbol symbol : searchResult){
+                        List<DailyPrice> dailyPriceList =
+                                childSearchResult.stream().filter(x -> x.getSymbol().getId() == symbol.getId()).collect(Collectors.toList());
+                        symbol.setDailyPriceList(dailyPriceList);
+                    }
+
+                    initChild = true;
+                }
+                else{
+                    searchResult = symbolRepository.findByInstrumentAndTickerLike("HK Stock Option", tickerPattern);
+                }
+
+                if (searchResult != null)
+                    return convertToStockOptionList(searchResult, !initChild);
+                else
+                    return Collections.emptyList();
+            } else
                 return Collections.emptyList();
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             throw new Exception("Invalid SEHK code.");
         }
     }
 
     @RequestMapping("/stockOption/code/{id}")
     @CrossOrigin(origins="http://localhost:4200")
-    public List<StockOption> findStockOptionByOptionCode(@PathVariable String id)
+    public List<StockOption> findStockOptionByOptionCode(@PathVariable String id,
+                                                         @RequestParam(value="startDate", required=false) String startDate,
+                                                         @RequestParam(value="startDate", required=false) String endDate)
     {
-        return null;
-    }
+        /*
+        Symbol symbol = new Symbol();
+        symbol.setInstrument("HK Stock Option");
+        symbol.setTicker(id);
 
-    @RequestMapping("/stockOption/sehk/{id}/listDate")
-    @CrossOrigin(origins="http://localhost:4200")
-    public List<Date> findStockOptionDateBySEHKCode(@PathVariable String id)
-    {
-        return symbolService.searchSymbol();
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withMatcher("Instrument", x -> x.exact())
+                .withMatcher("Ticker", x -> x.exact());
+
+        Example<Symbol> example  = Example.of(symbol, matcher);
+
+        List<Symbol> searchResult = symbolRepository.findAll(example);
+        */
+        List<Symbol> searchResult;
+        List<DailyPrice> childSearchResult = null;
+
+        Date[] startEndDate = Utilities.parseStartDateAndEndDate(startDate, endDate);
+
+        boolean initChild = false;
+        if(startEndDate != null && startEndDate.length == 2
+                && startEndDate[0] != null && startEndDate[1] != null){
+            searchResult = symbolRepository.findByInstrumentEqualsAndTickerAndDailyPriceListPriceDateBetween
+                    ("HK Stock Option", id, startEndDate[0], startEndDate[1]);
+            childSearchResult = dailyPriceRepository.findBySymbolInAndPriceDateBetween(searchResult,
+                    startEndDate[0], startEndDate[1]);
+
+            for(Symbol symbol : searchResult){
+                List<DailyPrice> dailyPriceList =
+                        childSearchResult.stream().filter(x -> x.getSymbol().getId() == symbol.getId()).collect(Collectors.toList());
+                symbol.setDailyPriceList(dailyPriceList);
+            }
+
+            initChild = true;
+        }
+        else{
+            searchResult = symbolRepository.findByInstrumentAndTicker("HK Stock Option", id);
+        }
+
+        if(searchResult != null)
+            return convertToStockOptionList(searchResult, !initChild);
+        else
+            return Collections.emptyList();
     }
 
     @RequestMapping("/stockOption/underlyingAsset")
@@ -93,24 +175,27 @@ public class StockOptionController {
         return underlyingAssetsList;
     }
 
-    private List<StockOption> convertToStockOptionList(List<Symbol> symbolList){
-        List<StockOption> result = new ArrayList<StockOption>();
-
-        return symbolList.stream().map(x -> convertToStockOption(x)).collect(Collectors.toList());
+    private List<StockOption> convertToStockOptionList(List<Symbol> symbolList, boolean skipChild){
+        return symbolList.stream().map(x -> convertToStockOption(x, skipChild)).collect(Collectors.toList());
     }
 
-    private StockOption convertToStockOption(Symbol symbol){
-        return new StockOption(symbol.getId(), symbol.getTicker(), symbol.getName());
+    private StockOption convertToStockOption(Symbol symbol, boolean skipChild){
+        StockOption result =  new StockOption(symbol.getId(), symbol.getTicker(), symbol.getName());
+        if(!skipChild) {
+            List<StockOptionHistory> children = convertToStockOptionHistoryList(symbol.getDailyPriceList());
+            result.setHistoryList(children);
+        }
+        return result;
     }
 
     private List<StockOptionHistory> convertToStockOptionHistoryList(List<DailyPrice> dailyPriceList){
-        List<StockOptionHistory> result = new ArrayList<StockOptionHistory>();
-
-        dailyPriceList.stream().map(x -> )
+        return dailyPriceList.stream().map(x -> convertToStockOptionHistory(x)).collect(Collectors.toList());
     }
 
-    private StockOptionHistory convertToStockOptionHistory(StockOptionHistory stockOptionHistory){
-        return new StockOption(stockOptionHistory.getId(), stockOptionHistory.getTicker(), stockOptionHistory.getName());
+    private StockOptionHistory convertToStockOptionHistory(DailyPrice dailyPrice){
+        return new StockOptionHistory(dailyPrice.getId(), dailyPrice.getSymbol().getId(),
+                dailyPrice.getPriceDate(), dailyPrice.getOpenPrice(), dailyPrice.getHighPrice(), dailyPrice.getLowPrice(),
+                dailyPrice.getClosePrice(), dailyPrice.getOpenInterest(), dailyPrice.getIv());
     }
 
 }

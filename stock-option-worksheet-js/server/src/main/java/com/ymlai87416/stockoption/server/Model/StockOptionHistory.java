@@ -7,15 +7,23 @@ public class StockOptionHistory {
     private Long id;
     private Long stockOptionId;
     private Date priceDate;
-    private Float openPrice;
-    private Float dailyHigh;
-    private Float dailyLow;
-    private Float settlePrice;
+    private Double openPrice;
+    private Double dailyHigh;
+    private Double dailyLow;
+    private Double settlePrice;
     private Long openInterest;
-    private Float iv;
+    private Double iv;
 
-    public StockOptionHistory(){
-
+    public StockOptionHistory(Long id, Long stockOptionId, Date priceDate, Double openPrice, Double dailyHigh, Double dailyLow, Double settlePrice, Long openInterest, Double iv){
+		this.id = id;
+		this.stockOptionId = stockOptionId;
+		this.priceDate = priceDate;
+		this.openPrice = openPrice;
+		this.dailyHigh = dailyHigh;
+		this.dailyLow = dailyLow;
+		this.settlePrice = settlePrice;
+		this.openInterest = openInterest;
+		this.iv = iv;
     }
 
     public Long getId() {
@@ -42,35 +50,35 @@ public class StockOptionHistory {
         this.priceDate = priceDate;
     }
 
-    public Float getOpenPrice() {
+    public Double getOpenPrice() {
         return openPrice;
     }
 
-    public void setOpenPrice(Float openPrice) {
+    public void setOpenPrice(Double openPrice) {
         this.openPrice = openPrice;
     }
 
-    public Float getDailyHigh() {
+    public Double getDailyHigh() {
         return dailyHigh;
     }
 
-    public void setDailyHigh(Float dailyHigh) {
+    public void setDailyHigh(Double dailyHigh) {
         this.dailyHigh = dailyHigh;
     }
 
-    public Float getDailyLow() {
+    public Double getDailyLow() {
         return dailyLow;
     }
 
-    public void setDailyLow(Float dailyLow) {
+    public void setDailyLow(Double dailyLow) {
         this.dailyLow = dailyLow;
     }
 
-    public Float getSettlePrice() {
+    public Double getSettlePrice() {
         return settlePrice;
     }
 
-    public void setSettlePrice(Float settlePrice) {
+    public void setSettlePrice(Double settlePrice) {
         this.settlePrice = settlePrice;
     }
 
@@ -82,11 +90,11 @@ public class StockOptionHistory {
         this.openInterest = openInterest;
     }
 
-    public Float getIv() {
+    public Double getIv() {
         return iv;
     }
 
-    public void setIv(Float iv) {
+    public void setIv(Double iv) {
         this.iv = iv;
     }
 
