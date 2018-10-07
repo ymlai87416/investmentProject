@@ -42,12 +42,12 @@ public class IVSeriesController {
     @CrossOrigin(origins="http://localhost:4200")
     public List<IVSeries> findStockBySEHKCode(@PathVariable String id,
                                               @RequestParam(value="startDate", required=false) String startDate,
-                                              @RequestParam(value="startDate", required=false) String endDate)
+                                              @RequestParam(value="endDate", required=false) String endDate)
     {
         List<TimeSeries> searchResult = null;
         List<TimePoint> childSearchResult = null;
 
-        Optional<StockOptionUnderlyingAsset> asset = underlyingAssetsList.stream().filter(x -> String.valueOf(x.getTicker()).compareTo(id.trim())==0).findFirst();
+        Optional<StockOptionUnderlyingAsset> asset = underlyingAssetsList.stream().filter(x -> x.getTicker().compareToIgnoreCase(id) == 0/*String.valueOf(x.getTicker()).compareTo(id.trim())==0*/).findFirst();
 
         if (asset.isPresent()) {
 

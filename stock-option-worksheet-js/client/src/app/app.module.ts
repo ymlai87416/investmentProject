@@ -24,8 +24,6 @@ import { ScreenDef } from './screen.model';
 import { HomeScreenModule } from './home-screen/home-screen.module';
 import { OptionDetailsModule } from './option-details/option-details.module';
 import { OptionImpliedVolatilityModule } from './option-implied-volatility/option-implied-volatility.module';
-import { OptionQueryFormComponent } from './common/option-query-form/option-query-form.component';
-
 
 const screens: ScreenDef[] = [
   {label: 'Home',                            name: 'Root',                       path: '',                       component: HomeScreenComponent},

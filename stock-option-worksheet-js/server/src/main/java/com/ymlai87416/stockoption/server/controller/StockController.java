@@ -38,7 +38,7 @@ public class StockController {
     @CrossOrigin(origins="http://localhost:4200")
     public List<Stock> findStockBySEHKCode(@PathVariable String id,
                                            @RequestParam(value="startDate", required=false) String startDate,
-                                           @RequestParam(value="startDate", required=false) String endDate)
+                                           @RequestParam(value="endDate", required=false) String endDate)
     {
         List<Symbol> searchResult = symbolRepository.findByInstrumentAndTicker("Stock", id);
         List<DailyPrice> childSearchResult = null;
@@ -71,7 +71,7 @@ public class StockController {
     @CrossOrigin(origins="http://localhost:4200")
     public StockStatistic getStockStatistic(@PathVariable String id,
                                             @RequestParam(value="startDate", required=false) String startDate,
-                                            @RequestParam(value="startDate", required=false) String endDate)
+                                            @RequestParam(value="endDate", required=false) String endDate)
     {
         List<Symbol> searchResult = symbolRepository.findByInstrumentAndTicker("Stock", id);
 
@@ -125,7 +125,7 @@ public class StockController {
     private Stock convertToStock(Symbol symbol, boolean skipChild){
         Stock result =  new Stock(symbol.getId(), symbol.getTicker(), symbol.getName());
 
-        if(skipChild) {
+        if(!skipChild) {
             List<StockHistory> children = convertToStockHistoryList(symbol.getDailyPriceList());
             result.setHistoryList(children);
         }

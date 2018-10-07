@@ -126,7 +126,7 @@ public class Symbol {
         this.lastUpdatedDate = lastUpdatedDate;
     }
 
-    @OneToMany(mappedBy="symbol", cascade=CascadeType.ALL)
+    @OneToMany(mappedBy="symbol", cascade=CascadeType.ALL, fetch = FetchType.LAZY)
     public List<DailyPrice> getDailyPriceList() {
         return dailyPriceList;
     }

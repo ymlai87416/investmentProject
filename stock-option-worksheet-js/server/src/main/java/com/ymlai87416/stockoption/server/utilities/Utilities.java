@@ -50,6 +50,8 @@ public class Utilities {
                     cal.add(Calendar.DATE, 0);
                     result[1] = cal.getTime();
                 }
+                else
+                    result[1] = sdf.parse(endDate);
             }
 
             return result;

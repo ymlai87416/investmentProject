@@ -64,8 +64,8 @@ public class StockOptionController {
                                                        @RequestParam(value="startDate", required=false) String startDate,
                                                        @RequestParam(value="endDate", required=false) String endDate) throws Exception {
         try {
-            int tickerNum = Integer.parseInt(id);
-            Optional<StockOptionUnderlyingAsset> asset = underlyingAssetsList.stream().filter(x -> tickerMatch(x.getTicker(), tickerNum)).findFirst();
+            //int tickerNum = Integer.parseInt(id);
+            Optional<StockOptionUnderlyingAsset> asset = underlyingAssetsList.stream().filter(x -> x.getTicker().compareToIgnoreCase(id) == 0 /*tickerMatch(x.getTicker(), tickerNum)*/).findFirst();
 
             if (asset.isPresent()) {
                 /*
@@ -122,7 +122,7 @@ public class StockOptionController {
     @CrossOrigin(origins="http://localhost:4200")
     public List<StockOption> findStockOptionByOptionCode(@PathVariable String id,
                                                          @RequestParam(value="startDate", required=false) String startDate,
-                                                         @RequestParam(value="startDate", required=false) String endDate)
+                                                         @RequestParam(value="endDate", required=false) String endDate)
     {
         /*
         Symbol symbol = new Symbol();
