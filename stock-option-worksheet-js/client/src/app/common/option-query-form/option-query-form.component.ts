@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DatepickerMode} from 'ng2-semantic-ui'
 
 @Component({
   selector: 'app-option-query-form',
@@ -6,8 +7,12 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./option-query-form.component.css']
 })
 export class OptionQueryFormComponent implements OnInit {
+  mode: DatepickerMode;
+  date: Date;
 
-  constructor() { }
+  constructor() {
+    this.mode = DatepickerMode.Date;
+   }
 
   ngOnInit() {
   }

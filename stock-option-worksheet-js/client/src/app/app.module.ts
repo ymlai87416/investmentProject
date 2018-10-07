@@ -6,7 +6,6 @@ import { HttpModule } from '@angular/http';
 import { AppComponent } from './app.component';
 import { HeaderComponent } from './header/header.component';
 import { HeaderItemComponent } from './header/header-item.component';
-import { OptionQueryFormComponent } from './option-query-form/option-query-form.component';
 import { HomeScreenComponent } from './home-screen/home-screen/home-screen.component';
 import { OptionDetailsScreenComponent } from './option-details/option-details-screen/option-details-screen.component';
 import { OptionImpliedVolatilityScreenComponent } from './option-implied-volatility/option-implied-volatility-screen/option-implied-volatility-screen.component';
@@ -25,6 +24,7 @@ import { ScreenDef } from './screen.model';
 import { HomeScreenModule } from './home-screen/home-screen.module';
 import { OptionDetailsModule } from './option-details/option-details.module';
 import { OptionImpliedVolatilityModule } from './option-implied-volatility/option-implied-volatility.module';
+import { OptionQueryFormComponent } from './common/option-query-form/option-query-form.component';
 
 
 const screens: ScreenDef[] = [
@@ -44,8 +44,6 @@ const routes: Routes = [
     AppComponent,
     HeaderComponent,
     HeaderItemComponent,
-    OptionDetailsScreenComponent,
-    OptionImpliedVolatilityScreenComponent,
   ],
   imports: [
     BrowserModule,
@@ -54,7 +52,7 @@ const routes: Routes = [
     FormsModule,
     HomeScreenModule,
     OptionDetailsModule,
-    OptionImpliedVolatilityModule
+    OptionImpliedVolatilityModule,
   ],
   providers: [
     { provide: APP_BASE_HREF, useValue: '/' },

@@ -1,0 +1,40 @@
+<form class="ui form">
+  <div class="fields">
+    <div class="field">
+      <label>Asset</label>
+      <select class="ui fluid dropdown">
+        <option value="">State</option>
+        <option value="AL">Alabama</option>
+        <option value="AK">Alaska</option>
+        <option value="AZ">Arizona</option>
+        <option value="AR">Arkansas</option>
+        <option value="CA">California</option>
+        <option value="CO">Colorado</option>
+        <option value="CT">Connecticut</option>
+        <option value="DE">Delaware</option>
+        <option value="DC">District Of Columbia</option>
+        <option value="FL">Florida</option>
+        <option value="GA">Georgia</option>
+        <option value="HI">Hawaii</option>
+      </select>
+    </div>
+    <!--<div class="field">
+      <label>Date:</label>
+      <input type="text" name="last-name" placeholder="Last Name">
+    </div>-->
+    <div class="field">
+        <label>Date</label>
+        <div class="ui left icon input">
+            <i class="calendar icon"></i>
+            <input suiDatepicker name="date"
+              [(ngModel)]="date"
+              [pickerMode]="mode"
+              [pickerFirstDayOfWeek]="firstDayOfWeek"
+              [pickerUseNativeOnMobile]="false">
+        </div>
+    </div>
+
+    <button class="ui button" type="submit">Submit</button>
+  </div>
+    
+  </form>
