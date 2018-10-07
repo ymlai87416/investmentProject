@@ -1,0 +1,28 @@
+<form class="ui form">
+  <div class="fields">
+    <div class="field">
+      <label>Asset</label>
+      <select [(ngModel)] = "selectedAsset" class="ui fluid dropdown" name="ticker">
+        <option *ngFor="let c of underlyingAssetList" [ngValue]="c">{{c.ticker + ": " + c.fullName}}</option>
+      </select> 
+    </div>
+    <!--<div class="field">
+      <label>Date:</label>
+      <input type="text" name="last-name" placeholder="Last Name">
+    </div>-->
+    <div class="field">
+        <label>Date</label>
+        <div class="ui left icon input">
+            <i class="calendar icon"></i>
+            <input suiDatepicker name="date"
+              [(ngModel)]="date"
+              [pickerMode]="mode"
+              [pickerFirstDayOfWeek]="firstDayOfWeek"
+              [pickerUseNativeOnMobile]="false">
+        </div>
+    </div>
+
+    <button class="ui button" type="submit">Submit</button>
+  </div>
+    
+  </form>

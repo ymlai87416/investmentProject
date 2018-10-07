@@ -1,5 +1,15 @@
-<app-option-query-form></app-option-query-form>
+<app-option-details-query-form></app-option-details-query-form>
 <br/>
 <app-stock-summary></app-stock-summary>
 <br/>
-<app-option-list></app-option-list>
+
+<app-option-list [hidden]="relatedOptionList != 'null' && relatedOptionList != 'undefined'">
+</app-option-list>
+
+<div [hidden]="relatedOptionList != 'null' && relatedOptionList != 'undefined' && error" class="ui message">
+    No data.
+</div>
+
+<div [hidden]="relatedOptionList != 'null' && relatedOptionList != 'undefined' && !error" class="ui red message">
+    Failed to load data.
+</div>

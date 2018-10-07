@@ -1,5 +1,16 @@
-<app-option-query-form></app-option-query-form>
-<br/>
+<app-option-iv-query-form></app-option-iv-query-form>
+<br />
 <app-implied-volatility-summary></app-implied-volatility-summary>
-<br/>
-<app-implied-volatility-graph></app-implied-volatility-graph>
+<br />
+
+<app-implied-volatility-graph [hidden]="relatedIVSeriesList != 'null' && relatedIVSeriesList != 'undefined'">
+
+</app-implied-volatility-graph>
+
+<div [hidden]="relatedIVSeriesList != 'null' && relatedIVSeriesList != 'undefined' && error" class="ui message">
+    No data.
+</div>
+
+<div [hidden]="relatedIVSeriesList != 'null' && relatedIVSeriesList != 'undefined' && !error" class="ui red message">
+    Failed to load data.
+</div>

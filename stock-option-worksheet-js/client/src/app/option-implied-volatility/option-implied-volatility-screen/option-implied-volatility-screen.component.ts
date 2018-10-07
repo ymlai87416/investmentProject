@@ -1,4 +1,7 @@
+
+
 import { Component, OnInit } from '@angular/core';
+import { IVSeries, Stock } from '../../option-result.model';
 
 @Component({
   selector: 'app-option-implied-volatility-screen',
@@ -7,7 +10,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class OptionImpliedVolatilityScreenComponent implements OnInit {
 
-  constructor() { }
+  stock: Stock;
+  relatedIVSeriesList: IVSeries[];
+  searchDate: Date;
+  error: boolean;
+
+  constructor() {
+    this.error = false;
+    this.stock = null;
+    this.relatedIVSeriesList = null;
+    this.searchDate = null;
+  }
 
   ngOnInit() {
   }

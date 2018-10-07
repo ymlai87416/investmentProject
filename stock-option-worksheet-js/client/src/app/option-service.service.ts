@@ -5,33 +5,33 @@ import {
   HttpHeaders
 } from '@angular/common/http';
 import { Observable } from 'rxjs/Rx';
+import 'rxjs/add/operator/map'
 
 import {
-  Stock, StockOption, StockOptionHistory,
+  Stock, StockHistory, StockOption, StockOptionHistory,
   StockOptionUnderlyingAsset,
   IVSeries, IVSeriesTimePoint,
-  StockOptionUnderlyingAsset,
 } from  './option-result.model';
+import { sprintf } from 'sprintf-js';
 
 export const WEBSERVICE_ROOT = 'http://localhost:8080'
-export const SEARCH_STOCK_BY_SEHK_CODE_URL = WEBSERVICE_ROOT + '/stock/{0}';
-export const SEARCH_STOCK_BY_SEHK_CODE_WITH_PARAM_URL = WEBSERVICE_ROOT + '/stock/{0}?startDate={1}&endDate={2}';
-export const SEARCH_STOCK_OPTION_BY_SEHK_CODE_URL = WEBSERVICE_ROOT + '/stockOption/sehk/{0}';
-export const SEARCH_STOCK_OPTION_BY_SEHK_CODE_WITH_PARAM_URL = WEBSERVICE_ROOT + '/stockOption/sehk/{0}?startDate={1}&endDate={2}';
-export const SEARCH_STOCK_OPTION_BY_TICKER_URL = WEBSERVICE_ROOT + '/stockOption/code/{0}';
-export const SEARCH_STOCK_OPTION_BY_TICKER_WITH_PARAM_URL = WEBSERVICE_ROOT + '/stockOption/code/{0}?startDate={1}&endDate={2}';
+export const SEARCH_STOCK_BY_SEHK_CODE_URL = WEBSERVICE_ROOT + '/stock/%s';
+export const SEARCH_STOCK_BY_SEHK_CODE_WITH_PARAM_URL = WEBSERVICE_ROOT + '/stock/%s?startDate=%s&endDate=%s';
+export const SEARCH_STOCK_OPTION_BY_SEHK_CODE_URL = WEBSERVICE_ROOT + '/stockOption/sehk/%s';
+export const SEARCH_STOCK_OPTION_BY_SEHK_CODE_WITH_PARAM_URL = WEBSERVICE_ROOT + '/stockOption/sehk/%s?startDate=%s&endDate=%s';
+export const SEARCH_STOCK_OPTION_BY_TICKER_URL = WEBSERVICE_ROOT + '/stockOption/code/%s';
+export const SEARCH_STOCK_OPTION_BY_TICKER_WITH_PARAM_URL = WEBSERVICE_ROOT + '/stockOption/code/%s?startDate=%s&endDate=%s';
 export const GET_UNDERLYING_ASSET_LIST_URL = WEBSERVICE_ROOT + '/stockOption/underlyingAsset';
-export const SEARCH_IV_SERIES_BY_SEHK_CODE_URL = WEBSERVICE_ROOT + '/ivseries/{0}';
-export const SEARCH_IV_SERIES_BY_SEHK_CODE_WITH_PARAM_URL = WEBSERVICE_ROOT + '/ivseries/{0}?startDate={1}&endDate={2}';
+export const SEARCH_IV_SERIES_BY_SEHK_CODE_URL = WEBSERVICE_ROOT + '/ivseries/%s';
+export const SEARCH_IV_SERIES_BY_SEHK_CODE_WITH_PARAM_URL = WEBSERVICE_ROOT + '/ivseries/%s?startDate=%s&endDate=%s';
 
 @Injectable({
   providedIn: 'root'
 })
-export class OptionServiceService {
+export class OptionService {
 
   constructor(
     private http: HttpClient,
-    @Inject(WEBSERVICE_ROOT) private webServiceRoot: string,
     @Inject(SEARCH_STOCK_BY_SEHK_CODE_URL) private searchStockBySehkCodeUrl: string,
     @Inject(SEARCH_STOCK_BY_SEHK_CODE_WITH_PARAM_URL) private searchStockBySehkCodeWithParamUrl: string,
     @Inject(SEARCH_STOCK_OPTION_BY_SEHK_CODE_URL) private searchStockOptionBySehkCodeUrl: string,
@@ -41,18 +41,20 @@ export class OptionServiceService {
     @Inject(GET_UNDERLYING_ASSET_LIST_URL) private getUnderlyingAssetListUrl: string,
     @Inject(SEARCH_IV_SERIES_BY_SEHK_CODE_URL) private searchIvSeriesBySehkCodeUrl: string,
     @Inject(SEARCH_IV_SERIES_BY_SEHK_CODE_WITH_PARAM_URL) private searchIvSeriesBySehkCodeWithParamUrl: string,
-  ) { }
+  ) { 
+    console.log("Option service created.");
+  }
 
-  searchStockBySehkCode(sehkCode: string, startDate?: Date, endDate?: Date): Observable<Stock> {
+  searchStockBySehkCode(sehkCode: string, startDate?: Date, endDate?: Date): Observable<Stock[]> {
     let queryUrl: string;
 
     if (startDate != null)
-      queryUrl = String.Format(searchStockBySehkCodeWithParamUrl, sehkCode, startDate, endDate);
+      queryUrl = sprintf(this.searchStockBySehkCodeWithParamUrl, sehkCode, startDate, endDate);
     else
-      queryUrl = String.Format(searchStockBySehkCode, sehkCode);
+      queryUrl = sprintf(this.searchStockBySehkCodeUrl, sehkCode);
 
     return this.http.get(queryUrl).map(response => {
-      return <any>response.map(item => {
+      return <any>response['test'].map(item => {
         // console.log("raw item", item); // uncomment if you want to debug
         if (item.historyList)
           item.historyList = item.historyList.map(history => new StockHistory(history));
@@ -61,16 +63,16 @@ export class OptionServiceService {
     });
   }
 
-  searchStockOptionBySehkCode(sehkCode: string, startDate?: Date, endDate?: Date): Observable<StockOption> {
+  searchStockOptionBySehkCode(sehkCode: string, startDate?: Date, endDate?: Date): Observable<StockOption[]> {
     let queryUrl: string;
 
     if (startDate != null)
-      queryUrl = String.Format(searchStockOptionBySehkCodeWithParamUrl, sehkCode, startDate, endDate);
+      queryUrl = sprintf(this.searchStockOptionBySehkCodeWithParamUrl, sehkCode, startDate, endDate);
     else
-      queryUrl = String.Format(searchStockOptionBySehkCodeUrl, sehkCode);
+      queryUrl = sprintf(this.searchStockOptionBySehkCodeUrl, sehkCode);
 
     return this.http.get(queryUrl).map(response => {
-      return <any>response.map(item => {
+      return <any>response['test'].map(item => {
         // console.log("raw item", item); // uncomment if you want to debug
         if (item.historyList)
           item.historyList = item.historyList.map(history => new StockOptionHistory(history));
@@ -79,16 +81,17 @@ export class OptionServiceService {
     });
   }
 
-  searchStockOptionByTicker(ticker: string, startDate?: Date, endDate?: Date): Observable<StockOption> {
+  searchStockOptionByTicker(ticker: string, startDate?: Date, endDate?: Date): Observable<StockOption[]> {
     let queryUrl: string;
 
     if (startDate != null)
-      queryUrl = String.Format(searchStockOptionByTickerWithParamUrl, sehkCode, startDate, endDate);
+      queryUrl = sprintf(this.searchStockOptionByTickerWithParamUrl, ticker, startDate, endDate);
     else
-      queryUrl = String.Format(searchStockOptionByTickerUrl, sehkCode);
+      queryUrl = sprintf(this.searchStockOptionByTickerUrl, ticker);
 
-    return this.http.get(queryUrl).map(response => {
-      return <any>response.map(item => {
+    return this.http.get(queryUrl).map(response => 
+      {
+      return <any>response['test'].map(item => {
         // console.log("raw item", item); // uncomment if you want to debug
         if (item.historyList)
           item.historyList = item.historyList.map(history => new StockOptionHistory(history));
@@ -97,26 +100,25 @@ export class OptionServiceService {
     });
   }
 
-  getUnderlyingAssetList(): Observable<>{
-    
-    return this.http.get(getUnderlyingAssetListUrl).map(response => {
-      return <any>response.map(item => {
-        // console.log("raw item", item); // uncomment if you want to debug
+  getUnderlyingAssetList(): Observable<StockOptionUnderlyingAsset[]>{
+    return this.http.get(this.getUnderlyingAssetListUrl).map(response => {
+      let responseArr = response as StockOptionUnderlyingAsset[];
+      return responseArr.map(item => {
         return new StockOptionUnderlyingAsset(item);
       });
     });
   }
 
-  searchIvSeriesBySehkCode(sehkCode: number, startDate?: Date, endDate?: Date): Observable<IVSeries> {
+  searchIvSeriesBySehkCode(sehkCode: number, startDate?: Date, endDate?: Date): Observable<IVSeries[]> {
     let queryUrl: string;
 
     if (startDate != null)
-      queryUrl = String.Format(searchIvSeriesBySehkCodeWithParamUrl, sehkCode, startDate, endDate);
+      queryUrl = sprintf(this.searchIvSeriesBySehkCodeWithParamUrl, sehkCode, startDate, endDate);
     else
-      queryUrl = String.Format(searchIvSeriesBySehkCodeUrl, sehkCode);
+      queryUrl = sprintf(this.searchIvSeriesBySehkCodeUrl, sehkCode);
 
     return this.http.get(queryUrl).map(response => {
-      return <any>response.map(item => {
+      return <any>response['test'].map(item => {
         // console.log("raw item", item); // uncomment if you want to debug
         if (item.historyList)
           item.historyList = item.historyList.map(history => new IVSeriesTimePoint(history));

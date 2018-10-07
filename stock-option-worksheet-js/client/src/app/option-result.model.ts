@@ -78,7 +78,7 @@ export class StockHistory{
     }
 }
 
-export class StockStatistic{
+export class StockStatistics{
     stockId: number;
     startDate: Date;
     endDate: Date;
