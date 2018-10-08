@@ -1,16 +1,28 @@
-<app-option-iv-query-form></app-option-iv-query-form>
+<app-option-iv-query-form
+    (loading)="loading=$event"
+    (ivseriesResult)="updateIvSeries($event)"
+    (priceResult)="priceResult=$event"
+    (selectedDate)="selectedDate=$event"
+    (error)="error=$event"
+    ></app-option-iv-query-form>
 <br />
-<app-implied-volatility-summary></app-implied-volatility-summary>
+<app-implied-volatility-summary
+    [hidden]="ivseriesResult == null || ivseriesResult == undefined"
+    [ivseriesResult]="ivseriesResult"
+    [priceResult]="priceResult"
+    [selectedDate]="selectedDate"
+    ></app-implied-volatility-summary>
 <br />
 
-<app-implied-volatility-graph [hidden]="relatedIVSeriesList != 'null' && relatedIVSeriesList != 'undefined'">
-
+<app-implied-volatility-graph 
+    [hidden]="ivseriesResult == null || ivseriesResult == undefined"
+   >
 </app-implied-volatility-graph>
 
-<div [hidden]="relatedIVSeriesList != 'null' && relatedIVSeriesList != 'undefined' && error" class="ui message">
-    No data.
+<div [hidden]="!((ivseriesResult == null || ivseriesResult == undefined) && !error)" class="ui message">
+    Start searching by choosing an asset and a date.
 </div>
 
-<div [hidden]="relatedIVSeriesList != 'null' && relatedIVSeriesList != 'undefined' && !error" class="ui red message">
+<div [hidden]="!((ivseriesResult == null || ivseriesResult == undefined) && error)" class="ui red message">
     Failed to load data.
 </div>

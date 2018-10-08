@@ -1,4 +1,4 @@
-<h1>HSBC on 5 Oct, 2018</h1>
+<h1>{{ getStockName(priceResult) }} on {{ getFormattedDate(selectedDate) }}</h1>
 
 <div class="ui two column grid">
   <div class="column">
@@ -6,30 +6,30 @@
       <thead>
         <tr>
           <th colspan="3">
-            Latest
+            Stock price info
           </th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>Closing price</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ getClosingPrice(priceResult) }}</td>
         </tr>
         <tr>
           <td>Opening price</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ getOpeningPrice(priceResult) }}</td>
         </tr>
         <tr>
           <td>Daily high</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ getDailyHigh(priceResult) }}</td>
         </tr>
         <tr>
           <td>Daily low</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ getDailyLow(priceResult) }}</td>
         </tr>
         <tr>
           <td>Volume</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ getVolume(priceResult) }}</td>
         </tr>
       </tbody>
     </table>
@@ -39,26 +39,26 @@
       <thead>
         <tr>
           <th colspan="3">
-            Latest
+            IV Statistics over last 3 months ({{ getStatsCount(getIvSeries(ivseriesResult, "IV")) }} days)
           </th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>Highest</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ getStatsMax(getIvSeries(ivseriesResult, "IV")) }}</td>
         </tr>
         <tr>
             <td>Lowest</td>
-            <td class="right aligned collapsing">10 hours ago</td>
+            <td class="right aligned collapsing">{{ getStatsMin(getIvSeries(ivseriesResult, "IV")) }}</td>
           </tr>
           <tr>
               <td>Average</td>
-              <td class="right aligned collapsing">10 hours ago</td>
+              <td class="right aligned collapsing">{{ getStatsAvg(getIvSeries(ivseriesResult, "IV")) }}</td>
             </tr>
             <tr>
                 <td>Standard deviation</td>
-                <td class="right aligned collapsing">10 hours ago</td>
+                <td class="right aligned collapsing">{{ getStatsStd(getIvSeries(ivseriesResult, "IV")) }}</td>
               </tr>
       </tbody>
     </table>

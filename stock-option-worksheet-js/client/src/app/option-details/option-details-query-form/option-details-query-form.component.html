@@ -2,26 +2,10 @@
   <div class="fields">
     <div class="field">
       <label>Asset</label>
-      <select class="ui fluid dropdown">
-        <option value="">State</option>
-        <option value="AL">Alabama</option>
-        <option value="AK">Alaska</option>
-        <option value="AZ">Arizona</option>
-        <option value="AR">Arkansas</option>
-        <option value="CA">California</option>
-        <option value="CO">Colorado</option>
-        <option value="CT">Connecticut</option>
-        <option value="DE">Delaware</option>
-        <option value="DC">District Of Columbia</option>
-        <option value="FL">Florida</option>
-        <option value="GA">Georgia</option>
-        <option value="HI">Hawaii</option>
-      </select>
+      <select [(ngModel)] = "selectedAsset" class="ui fluid dropdown" name="ticker">
+        <option *ngFor="let c of underlyingAssetList" [ngValue]="c">{{c.ticker + ": " + c.fullName}}</option>
+      </select> 
     </div>
-    <!--<div class="field">
-      <label>Date:</label>
-      <input type="text" name="last-name" placeholder="Last Name">
-    </div>-->
     <div class="field">
         <label>Date</label>
         <div class="ui left icon input">
@@ -34,7 +18,7 @@
         </div>
     </div>
 
-    <button class="ui button" type="submit">Submit</button>
+    <button class="ui button" type="submit" #search>Submit</button>
   </div>
     
   </form>

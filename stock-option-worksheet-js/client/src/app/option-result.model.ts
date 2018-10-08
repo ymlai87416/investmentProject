@@ -46,11 +46,15 @@ export class Stock {
     id: number;
     ticker: string;
     name: string;
+    historyList: StockHistory[];
+    sehkCode: number;
 
     constructor(obj? : any){
         this.id = obj && obj.id || null;
         this.ticker = obj && obj.ticker || null;
         this.name = obj && obj.name || null;
+        this.sehkCode = obj && obj.sehkCode || null;
+        this.historyList = obj && obj.historyList || null;
     }
 }
 
@@ -63,7 +67,7 @@ export class StockHistory{
     dailyLow: number;
     closePrice: number;
     adjClosePrice: number;
-    volumn: number;
+    volume: number;
 
     constructor(obj?: any){
         this.id = obj && obj.id || null;
@@ -74,7 +78,7 @@ export class StockHistory{
         this.dailyLow = obj && obj.dailyLow || null;
         this.closePrice = obj && obj.closePrice || null;
         this.adjClosePrice = obj && obj.adjClosePrice || null;
-        this.volumn = obj && obj.volumn || null;
+        this.volume = obj && obj.volume || null;
     }
 }
 

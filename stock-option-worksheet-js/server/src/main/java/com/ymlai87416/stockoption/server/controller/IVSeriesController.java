@@ -58,6 +58,7 @@ public class IVSeriesController {
                     && startEndDate[0] != null && startEndDate[1] != null) {
 
                 searchResult = timeSeriesRepository.findBySeriesNameLikeAndTimePointListTimePointDateBetween(asset.get().getFullName()+"%", startEndDate[0], startEndDate[1]);
+                searchResult = searchResult.stream().distinct().collect(Collectors.toList());
 
                 childSearchResult = timePointRepository.findTimePointByTimeSeriesInAndTimePointDateBetween(searchResult,
                         startEndDate[0], startEndDate[1]);

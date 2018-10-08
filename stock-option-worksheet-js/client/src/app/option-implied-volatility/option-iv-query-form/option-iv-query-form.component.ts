@@ -27,14 +27,15 @@ export class OptionIvQueryFormComponent implements OnInit {
   @Output() loading: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() ivseriesResult: EventEmitter<IVSeries[]> = new EventEmitter<IVSeries[]>();
   @Output() priceResult: EventEmitter<Stock> = new EventEmitter<Stock>();
-  @Output() statsResult: EventEmitter<StockStatistics> = new EventEmitter<StockStatistics>();
+  @Output() selectedDate: EventEmitter<Date> = new EventEmitter<Date>();
+  @Output() error: EventEmitter<boolean> = new EventEmitter<boolean>();
  
   mode: DatepickerMode;
   date: Date;
   underlyingAssetList: StockOptionUnderlyingAsset[];
   selectedAsset: StockOptionUnderlyingAsset;
 
-  @ViewChild('button') button;
+  @ViewChild('search') button;
 
   constructor(
     private optionService: OptionService,) {
@@ -44,6 +45,8 @@ export class OptionIvQueryFormComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log(this.button);
+
     this.optionService.getUnderlyingAssetList().subscribe(
       (results: StockOptionUnderlyingAsset[]) => { // on sucesss
         this.loading.emit(false);
@@ -66,29 +69,57 @@ export class OptionIvQueryFormComponent implements OnInit {
       .debounceTime(250)                         // only once every 250ms
       .do(() => this.loading.emit(true))         // enable loading
       // search, discarding old events if new input comes in
-      .map((query: string) => {
-      
-        this.optionService.search(query)
+      .map((query) => {
+        console.log("Button clicked!");
+        let asset = query["asset"] as StockOptionUnderlyingAsset;
+        let date = query["date"] as Date
+        var sDate = new Date(date);
+        sDate.setMonth(sDate.getMonth()-3)
+        let ivResultOb = this.optionService.searchIvSeriesBySehkCode(asset.ticker, sDate, date);
+        let stockResultOb = this.optionService.searchStockBySehkCode(asset.ticker, date, date);
+        let dateOb = Observable.of(date);
+        let result = Observable.zip(ivResultOb, stockResultOb, dateOb,
+          (a, b, c) => {
+            let combine = {ivResult: a, stockResult: b, queryDate: c};
+            return combine;
+          }
+        );
+
+        return result;
       })
       .switch()
       // act on the return of the search
       .subscribe(
-        (results: SearchResult[]) => { // on sucesss
+        (results) => { // on sucesss
           this.loading.emit(false);
-          this.results.emit(results);
+
+          let ivResult = results["ivResult"] as IVSeries[];
+          let stockResult = results["stockResult"] as Stock[];
+          let queryDate = results["queryDate"] as Date;
+
+          if(ivResult != null && stockResult != null){
+            this.ivseriesResult.emit(ivResult);
+            this.priceResult.emit(stockResult[0]);
+            this.selectedDate.emit(queryDate);
+            this.error.emit(false);
+          }
+          else{
+            this.ivseriesResult.emit(null);
+            this.priceResult.emit(null);
+            this.selectedDate.emit(null);
+            this.error.emit(true);
+          }
+
+          console.log(results);
         },
         (err: any) => { // on error
           console.log(err);
           this.loading.emit(false);
+          this.loading.emit(true);
         },
         () => { // on completion
           this.loading.emit(false);
         }
       );
   }
-
-
-
-  
-
 }

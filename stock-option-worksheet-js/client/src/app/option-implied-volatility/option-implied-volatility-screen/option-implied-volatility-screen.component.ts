@@ -10,19 +10,27 @@ import { IVSeries, Stock } from '../../option-result.model';
 })
 export class OptionImpliedVolatilityScreenComponent implements OnInit {
 
-  stock: Stock;
-  relatedIVSeriesList: IVSeries[];
-  searchDate: Date;
+  loading: boolean;
+  ivseriesResult: IVSeries[];
+  priceResult: Stock;
   error: boolean;
+  selectedDate: Date;
 
   constructor() {
     this.error = false;
-    this.stock = null;
-    this.relatedIVSeriesList = null;
-    this.searchDate = null;
+    this.loading = false;
+    this.ivseriesResult = null;
+    this.priceResult = null;
+    this.selectedDate = null;
+
+    console.log(this.ivseriesResult == null || this.ivseriesResult == undefined);
   }
 
   ngOnInit() {
+  }
+
+  updateIvSeries(ivseriesResult: IVSeries[]){
+    this.ivseriesResult = ivseriesResult;
   }
 
 }

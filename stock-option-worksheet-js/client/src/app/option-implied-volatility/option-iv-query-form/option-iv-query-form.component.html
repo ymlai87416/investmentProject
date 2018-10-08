@@ -6,10 +6,6 @@
         <option *ngFor="let c of underlyingAssetList" [ngValue]="c">{{c.ticker + ": " + c.fullName}}</option>
       </select> 
     </div>
-    <!--<div class="field">
-      <label>Date:</label>
-      <input type="text" name="last-name" placeholder="Last Name">
-    </div>-->
     <div class="field">
         <label>Date</label>
         <div class="ui left icon input">
@@ -22,7 +18,7 @@
         </div>
     </div>
 
-    <button class="ui button" type="submit">Submit</button>
+    <button class="ui button" type="submit" #search>Submit</button>
   </div>
     
   </form>
