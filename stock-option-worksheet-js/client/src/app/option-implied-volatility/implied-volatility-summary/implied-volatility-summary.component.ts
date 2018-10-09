@@ -80,7 +80,7 @@ export class ImpliedVolatilitySummaryComponent implements OnInit {
 
   getStatsMax(targetSeries: IVSeries): string{
     if (targetSeries != null){
-      let result= Math.max(...targetSeries.timePointList.map(x=> x.value)).toString();
+      let result= Math.max(...targetSeries.timePointList.map(x=> x.value));
       return sprintf("%.5f", result);
     }
     else return "N/A";
@@ -88,7 +88,7 @@ export class ImpliedVolatilitySummaryComponent implements OnInit {
 
   getStatsMin(targetSeries: IVSeries): string{
     if (targetSeries != null){
-      let result = Math.min(...targetSeries.timePointList.map(x=> x.value)).toString();
+      let result = Math.min(...targetSeries.timePointList.map(x=> x.value));
       return sprintf("%.5f", result);
     }
     else return "N/A";

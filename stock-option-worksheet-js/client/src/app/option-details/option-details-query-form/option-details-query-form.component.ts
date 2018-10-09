@@ -1,4 +1,4 @@
-import { 
+import {
   Component,
   OnInit,
   Output,
@@ -6,7 +6,7 @@ import {
   ElementRef,
   ViewChild
 } from '@angular/core';
-import { DatepickerMode} from 'ng2-semantic-ui';
+import { DatepickerMode } from 'ng2-semantic-ui';
 
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/debounceTime';
@@ -14,7 +14,7 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/switch';
 import { Observable } from 'rxjs/Rx';
 
-import { StockOption, StockOptionUnderlyingAsset, Stock, StockStatistics } from '../../option-result.model';
+import { StockOption, StockOptionUnderlyingAsset, Stock, StockStatistics, IVSeries } from '../../option-result.model';
 import { OptionService } from '../../option-service.service';
 
 @Component({
@@ -24,9 +24,9 @@ import { OptionService } from '../../option-service.service';
 })
 export class OptionDetailsQueryFormComponent implements OnInit {
   @Output() loading: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() ivsericesResult: EventEmitter<StockOption[]> = new EventEmitter<StockOption[]>();
-  @Output() priceResult: EventEmitter<Stock> = new EventEmitter<Stock>();
-  @Output() priceStats: EventEmitter<StockStatistics> = new EventEmitter<StockStatistics>();
+  @Output() stockOptionList: EventEmitter<StockOption[]> = new EventEmitter<StockOption[]>();
+  @Output() ivSeries: EventEmitter<IVSeries> = new EventEmitter<IVSeries>();
+  @Output() stock: EventEmitter<Stock> = new EventEmitter<Stock>();
   @Output() selectedDate: EventEmitter<Date> = new EventEmitter<Date>();
   @Output() error: EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -38,7 +38,7 @@ export class OptionDetailsQueryFormComponent implements OnInit {
   @ViewChild('search') button;
 
   constructor(
-    private optionService: OptionService,) {
+    private optionService: OptionService, ) {
     this.mode = DatepickerMode.Date;
     this.underlyingAssetList = null;
     this.selectedAsset = null;
@@ -60,12 +60,12 @@ export class OptionDetailsQueryFormComponent implements OnInit {
       () => { // on completion
         this.loading.emit(false);
       }
-      
+
     )
 
     Observable.fromEvent(this.button.nativeElement, 'click')
-      .map((e: any) => { let obj = {asset: this.selectedAsset, date: this.date}; return obj;}) // extract the value of the input
-      .filter(query => query["asset"] != null && query["date"] != null ) // filter out if empty
+      .map((e: any) => { let obj = { asset: this.selectedAsset, date: this.date }; return obj; }) // extract the value of the input
+      .filter(query => query["asset"] != null && query["date"] != null) // filter out if empty
       .debounceTime(250)                         // only once every 250ms
       .do(() => this.loading.emit(true))         // enable loading
       // search, discarding old events if new input comes in
@@ -74,13 +74,14 @@ export class OptionDetailsQueryFormComponent implements OnInit {
         let asset = query["asset"] as StockOptionUnderlyingAsset;
         let date = query["date"] as Date
         var sDate = new Date(date);
-        sDate.setMonth(sDate.getMonth()-3)
-        let ivResultOb = this.optionService.searchIvSeriesBySehkCode(asset.ticker, sDate, date);
-        let stockResultOb = this.optionService.searchStockBySehkCode(asset.ticker, date, date);
+        sDate.setMonth(sDate.getMonth() - 3)
+        let stockListOb = this.optionService.searchStockBySehkCode(asset.ticker, date, date);
+        let stockOptionListOb = this.optionService.searchStockOptionBySehkCode(asset.ticker, date, date);
+        let ivSeriesListOb = this.optionService.searchIvSeriesBySehkCode(asset.ticker, sDate, date);
         let dateOb = Observable.of(date);
-        let result = Observable.zip(ivResultOb, stockResultOb, dateOb,
-          (a, b, c) => {
-            let combine = {ivResult: a, stockResult: b, queryDate: c};
+        let result = Observable.zip(stockOptionListOb, ivSeriesListOb, dateOb, stockListOb,
+          (a, b, c, d) => {
+            let combine = { stockOptionList: a, ivSeriesList: b, queryDate: c, stockList: d };
             return combine;
           }
         );
@@ -92,20 +93,31 @@ export class OptionDetailsQueryFormComponent implements OnInit {
       .subscribe(
         (results) => { // on sucesss
           this.loading.emit(false);
-
-          let ivResult = results["ivResult"] as IVSeries[];
-          let stockResult = results["stockResult"] as Stock[];
+          let stockList = results["stockList"] as Stock[];
+          let stockOptionList = results["stockOptionList"] as StockOption[];
+          let ivSeriesList = results["ivSeriesList"] as IVSeries[];
           let queryDate = results["queryDate"] as Date;
+          let stock;
+          let ivSeries;
 
-          if(ivResult != null && stockResult != null){
-            this.ivseriesResult.emit(ivResult);
-            this.priceResult.emit(stockResult[0]);
+          if (stockList != null && stockList.length > 0) stock = stockList[0];
+          else stock = null;
+
+          if (ivSeriesList != null && ivSeriesList.length > 0) ivSeries = ivSeriesList.find(x => x.seriesName.includes("IV"));
+          else ivSeries = null;
+
+          if (stockOptionList != null && queryDate != null
+            && ivSeries != null && stock != null) {
+            this.stock.emit(stock);
+            this.stockOptionList.emit(stockOptionList);
+            this.ivSeries.emit(ivSeries);
             this.selectedDate.emit(queryDate);
             this.error.emit(false);
           }
-          else{
-            this.ivseriesResult.emit(null);
-            this.priceResult.emit(null);
+          else {
+            this.stock.emit(null);
+            this.stockOptionList.emit(null);
+            this.ivSeries.emit(null);
             this.selectedDate.emit(null);
             this.error.emit(true);
           }

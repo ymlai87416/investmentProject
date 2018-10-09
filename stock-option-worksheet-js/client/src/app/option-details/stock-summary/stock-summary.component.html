@@ -1,4 +1,4 @@
-<h1>HSBC on 5 Oct, 2018</h1>
+<h1>{{ getStockName(stock) }} on {{ getFormattedDate(selectedDate) }}</h1>
 <div class="ui two column grid">
   <div class="column">
     <table class="ui celled striped table">
@@ -10,9 +10,13 @@
         </tr>
       </thead>
       <tbody>
+          <tr>
+              <td>Current price</td>
+              <td class="right aligned collapsing">{{ formatNumber(getCurrentPrice(stock, selectedDate)) }}</td>
+            </tr>
         <tr>
           <td>Current IV</td>
-          <td class="right aligned collapsing">10 hours ago</td>
+          <td class="right aligned collapsing">{{ formatNumber(getCurrentIV(ivSeries, selectedDate)) }}</td>
         </tr>
       </tbody>
     </table>
@@ -29,19 +33,19 @@
       <tbody>
         <tr>
           <td>Maximum IV</td>
-          <td class="right aligned collapsing">MAX</td>
+          <td class="right aligned collapsing">{{ formatNumber(getStatsMax(ivSeries)) }}</td>
         </tr>
         <tr>
           <td>Minimum IV</td>
-          <td class="right aligned collapsing">MIN</td>
+          <td class="right aligned collapsing">{{ formatNumber(getStatsMin(ivSeries)) }}</td>
         </tr>
         <tr>
           <td>Average IV</td>
-          <td class="right aligned collapsing">AVERAGE</td>
+          <td class="right aligned collapsing">{{ formatNumber(getStatsAvg(ivSeries)) }}</td>
         </tr>
         <tr>
           <td>Standard deviation</td>
-          <td class="right aligned collapsing">STD</td>
+          <td class="right aligned collapsing">{{ formatNumber(getStatsStd(ivSeries)) }}</td>
         </tr>
       </tbody>
     </table>

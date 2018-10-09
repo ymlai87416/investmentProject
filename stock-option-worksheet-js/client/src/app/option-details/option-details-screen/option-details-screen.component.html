@@ -1,15 +1,29 @@
-<app-option-details-query-form></app-option-details-query-form>
+<app-option-details-query-form
+    (loading)="loading=$event"
+    (stockOptionList)="stockOptionList=$event"
+    (ivSeries)="ivSeries=$event"
+    (stock)="stock=$event"
+    (selectedDate)="selectedDate=$event"
+    (error)="error=$event"
+    ></app-option-details-query-form>
 <br/>
-<app-stock-summary></app-stock-summary>
+<app-stock-summary
+    [hidden]="!isInCorrectState()"
+    [stock]="stock"
+    [ivSeries]="ivSeries"
+    [selectedDate]="selectedDate"
+    ></app-stock-summary>
 <br/>
 
-<app-option-list [hidden]="relatedOptionList != 'null' && relatedOptionList != 'undefined'">
+<app-option-list 
+    [hidden]="!isInCorrectState()"
+    [stockOptionList]="stockOptionList">
 </app-option-list>
 
-<div [hidden]="relatedOptionList != 'null' && relatedOptionList != 'undefined' && error" class="ui message">
-    No data.
+<div [hidden]="isInCorrectState() || (!isInCorrectState() && error)" class="ui message">
+    Start searching by choosing an asset and a date.
 </div>
 
-<div [hidden]="relatedOptionList != 'null' && relatedOptionList != 'undefined' && !error" class="ui red message">
+<div [hidden]="isInCorrectState() || (!isInCorrectState() && !error)" class="ui red message">
     Failed to load data.
 </div>

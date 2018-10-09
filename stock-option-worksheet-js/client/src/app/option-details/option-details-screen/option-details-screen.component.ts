@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { StockOptionHistory, Stock, StockStatistics} from '../../option-result.model';
+import { 
+  StockOption, 
+  Stock, IVSeries
+} from '../../option-result.model';
 
 @Component({
   selector: 'app-option-details-screen',
@@ -8,20 +11,28 @@ import { StockOptionHistory, Stock, StockStatistics} from '../../option-result.m
 })
 export class OptionDetailsScreenComponent implements OnInit {
   stock: Stock;
-  stockStats: StockStatistics;
-  relatedOptionList: StockOptionHistory[];
-  searchDate: Date;
+  ivSeries: IVSeries;
+  stockOptionList: StockOption[];
+  selectedDate: Date;
   error: boolean;
+  loading: boolean;
 
   constructor() {
     this.error = false;
-    this.stockStats = null;
+    this.loading = false;
+    this.ivSeries = null;
     this.stock = null;
-    this.relatedOptionList = null;
-    this.searchDate = null;
+    this.stockOptionList = null;
+    this.selectedDate = null;
   }
 
   ngOnInit() {
   }
 
+  isInCorrectState(): boolean{
+    let result =  this.stock != null && this.selectedDate != null
+      && this.stockOptionList != null && this.ivSeries != null;
+    
+    return result;
+  }
 }

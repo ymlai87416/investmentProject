@@ -1,3 +1,10 @@
+import * as moment from 'moment';
+
+function _convertStringToDate(input: string): Date {
+    let result = moment(input).toDate();
+    return result;
+}
+
 export class StockOption {
     id: number;
     ticker: string;
@@ -14,7 +21,7 @@ export class StockOption {
         this.historyList = obj && obj.historyList || null;
         this.optionType = obj && obj.optionType || null;
         this.strikePrice = obj && obj.strikePrice || null;
-        this.dateTime = obj && obj.dateTime || null;
+        this.dateTime = obj && _convertStringToDate(obj.dateTime) || null;
     }
 }
 
@@ -32,7 +39,7 @@ export class StockOptionHistory {
     constructor(obj?: any){
         this.id = obj && obj.id || null;
         this.stockOptionId = obj && obj.stockOptionId || null;
-        this.priceDate = obj && obj.priceDate || null;
+        this.priceDate = obj && _convertStringToDate(obj.priceDate) || null;
         this.openPrice = obj && obj.openPrice || null;
         this.dailyHigh = obj && obj.dailyHigh || null;
         this.dailyLow = obj && obj.dailyLow || null;
@@ -72,7 +79,7 @@ export class StockHistory{
     constructor(obj?: any){
         this.id = obj && obj.id || null;
         this.stockId = obj && obj.stockId || null;
-        this.priceDate = obj && obj.priceDate || null;
+        this.priceDate = obj && _convertStringToDate(obj.priceDate) || null;
         this.openPrice = obj && obj.openPrice || null;
         this.dailyHigh = obj && obj.dailyHigh || null;
         this.dailyLow = obj && obj.dailyLow || null;
@@ -93,8 +100,8 @@ export class StockStatistics{
 
     constructor(obj?: any){
         this.stockId = obj && obj.stockId || null;
-        this.startDate = obj && obj.startDate || null; 
-        this.endDate = obj && obj.endDate || null;
+        this.startDate = obj && _convertStringToDate(obj.startDate) || null; 
+        this.endDate = obj && _convertStringToDate(obj.endDate) || null;
         this.minPrice = obj && obj.minPrice || null;
         this.maxPrice = obj && obj.maxPrice || null;
         this.meanPrice = obj && obj.meanPrice || null;
@@ -121,7 +128,7 @@ export class IVSeriesTimePoint{
 
     constructor(obj?: any){
         this.id = obj && obj.id || null;
-        this.date = obj && obj.date || null;
+        this.date = obj && _convertStringToDate(obj.date) || null;
         this.value = obj && obj.value || null;
     }
 }
