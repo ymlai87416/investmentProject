@@ -71,6 +71,17 @@ export class ImpliedVolatilitySummaryComponent implements OnInit {
       return null;
   }
 
+  getCurrent(targetSeries: IVSeries): string{
+    if (targetSeries != null){
+      let tp = targetSeries.timePointList.find(x => x.date.getTime() == this.selectedDate.getTime())
+      if (tp != null)
+        return sprintf("%.5f", tp.value);
+      else
+        return "N/A";
+    }
+    else return "N/A";
+  }
+
   getStatsCount(targetSeries: IVSeries): string{
     if (targetSeries != null){
       return targetSeries.timePointList.length.toString();

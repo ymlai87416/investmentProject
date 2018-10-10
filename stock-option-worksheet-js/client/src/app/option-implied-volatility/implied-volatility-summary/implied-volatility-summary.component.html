@@ -39,11 +39,15 @@
       <thead>
         <tr>
           <th colspan="3">
-            IV Statistics over last 3 months ({{ getStatsCount(getIvSeries(ivseriesResult, "IV")) }} days)
+            IV Statistics over last {{ getStatsCount(getIvSeries(ivseriesResult, "IV")) }} trading days
           </th>
         </tr>
       </thead>
       <tbody>
+          <tr>
+              <td>Current</td>
+              <td class="right aligned collapsing">{{ getCurrent(getIvSeries(ivseriesResult, "IV")) }}</td>
+            </tr>
         <tr>
           <td>Highest</td>
           <td class="right aligned collapsing">{{ getStatsMax(getIvSeries(ivseriesResult, "IV")) }}</td>

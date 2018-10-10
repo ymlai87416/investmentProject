@@ -34,6 +34,7 @@ export class OptionIvQueryFormComponent implements OnInit {
   date: Date;
   underlyingAssetList: StockOptionUnderlyingAsset[];
   selectedAsset: StockOptionUnderlyingAsset;
+  timeRange: number;
 
   @ViewChild('search') button;
 
@@ -42,6 +43,7 @@ export class OptionIvQueryFormComponent implements OnInit {
     this.mode = DatepickerMode.Date;
     this.underlyingAssetList = null;
     this.selectedAsset = null;
+    this.timeRange = 3;
   }
 
   ngOnInit() {
@@ -64,7 +66,7 @@ export class OptionIvQueryFormComponent implements OnInit {
     )
 
     Observable.fromEvent(this.button.nativeElement, 'click')
-      .map((e: any) => { let obj = {asset: this.selectedAsset, date: this.date}; return obj;}) // extract the value of the input
+      .map((e: any) => { let obj = {asset: this.selectedAsset, date: this.date, timeRange: this.timeRange}; return obj;}) // extract the value of the input
       .filter(query => query["asset"] != null && query["date"] != null ) // filter out if empty
       .debounceTime(250)                         // only once every 250ms
       .do(() => this.loading.emit(true))         // enable loading
@@ -72,9 +74,10 @@ export class OptionIvQueryFormComponent implements OnInit {
       .map((query) => {
         console.log("Button clicked!");
         let asset = query["asset"] as StockOptionUnderlyingAsset;
-        let date = query["date"] as Date
+        let date = query["date"] as Date;
+        let timeRange = query["timeRange"] as number;
         var sDate = new Date(date);
-        sDate.setMonth(sDate.getMonth()-3)
+        sDate.setMonth(sDate.getMonth()-timeRange)
         let ivResultOb = this.optionService.searchIvSeriesBySehkCode(asset.ticker, sDate, date);
         let stockResultOb = this.optionService.searchStockBySehkCode(asset.ticker, date, date);
         let dateOb = Observable.of(date);
@@ -97,7 +100,7 @@ export class OptionIvQueryFormComponent implements OnInit {
           let stockResult = results["stockResult"] as Stock[];
           let queryDate = results["queryDate"] as Date;
 
-          if(ivResult != null && stockResult != null){
+          if(this.validate(ivResult, stockResult, queryDate)){
             this.ivseriesResult.emit(ivResult);
             this.priceResult.emit(stockResult[0]);
             this.selectedDate.emit(queryDate);
@@ -115,11 +118,37 @@ export class OptionIvQueryFormComponent implements OnInit {
         (err: any) => { // on error
           console.log(err);
           this.loading.emit(false);
-          this.loading.emit(true);
         },
         () => { // on completion
           this.loading.emit(false);
         }
       );
+  }
+
+  isActive(month: number): boolean{
+    return month == this.timeRange;
+  }
+
+  setTimeRange(month: number): void{
+    console.log(month);
+    this.timeRange= month;
+  }
+
+  validate(ivResultList: IVSeries[], stockResult: Stock[], queryDate: Date): boolean{
+    if(ivResultList != null && stockResult != null){
+      if(stockResult.length > 0){
+        let hasPrice = stockResult[0].historyList != null && stockResult[0].historyList.find(x => x.priceDate.getTime() == queryDate.getTime()) != null;
+        let ivResult = ivResultList.find(x => x.seriesName.includes("IV"));
+        let ivHasPrice;
+        if(ivResult != null)
+          ivHasPrice  = ivResult.timePointList.find(x => x.date.getTime() == queryDate.getTime()) != null;
+        else
+          ivHasPrice = null;
+
+        return hasPrice && ivHasPrice;
+      }
+      else return false;
+    }
+    else return false;
   }
 }

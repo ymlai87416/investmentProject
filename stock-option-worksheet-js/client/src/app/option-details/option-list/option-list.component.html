@@ -1,8 +1,9 @@
-<p>
-  Stock option list:
-</p>
-<a></a>
-<a></a>
+
+<div class="ui icon buttons">
+    <button class="ui button" [ngClass]="{ blue: displayMode=='price' }" (click)="setDisplayMode('price')" >Settle price</button>
+    <span class="or" ></span>
+    <button class="ui button" [ngClass]="{ blue: displayMode=='openInterest' }" (click)="setDisplayMode('openInterest')" >Open interest</button>
+  </div>
 
 <table class="ui celled table">
   <thead>
@@ -15,9 +16,9 @@
 
   <tr *ngFor="let price of priceList; let i = index">
     <td>{{price}}</td> 
-    <td></td> 
+    <td class="active"></td> 
     <td *ngFor="let data of callMonthList; let j = index">{{ callData[i][j] }}</td>
-    <td></td> 
+    <td class="active"></td> 
     <td *ngFor="let data of putMonthList; let j = index">{{ putData[i][j] }}</td>
   </tr>   
 </table>

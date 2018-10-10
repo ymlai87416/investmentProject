@@ -74,10 +74,10 @@ export class OptionDetailsQueryFormComponent implements OnInit {
         let asset = query["asset"] as StockOptionUnderlyingAsset;
         let date = query["date"] as Date
         var sDate = new Date(date);
-        sDate.setMonth(sDate.getMonth() - 3)
-        let stockListOb = this.optionService.searchStockBySehkCode(asset.ticker, date, date);
+        sDate.setMonth(sDate.getMonth() - 12)
+        let stockListOb = this.optionService.searchStockBySehkCode(asset.ticker, sDate, date);
         let stockOptionListOb = this.optionService.searchStockOptionBySehkCode(asset.ticker, date, date);
-        let ivSeriesListOb = this.optionService.searchIvSeriesBySehkCode(asset.ticker, sDate, date);
+        let ivSeriesListOb = this.optionService.searchIvSeriesBySehkCode(asset.ticker, date, date);
         let dateOb = Observable.of(date);
         let result = Observable.zip(stockOptionListOb, ivSeriesListOb, dateOb, stockListOb,
           (a, b, c, d) => {
@@ -92,6 +92,7 @@ export class OptionDetailsQueryFormComponent implements OnInit {
       // act on the return of the search
       .subscribe(
         (results) => { // on sucesss
+          console.log("option detail loading success!");
           this.loading.emit(false);
           let stockList = results["stockList"] as Stock[];
           let stockOptionList = results["stockOptionList"] as StockOption[];
@@ -106,8 +107,7 @@ export class OptionDetailsQueryFormComponent implements OnInit {
           if (ivSeriesList != null && ivSeriesList.length > 0) ivSeries = ivSeriesList.find(x => x.seriesName.includes("IV"));
           else ivSeries = null;
 
-          if (stockOptionList != null && queryDate != null
-            && ivSeries != null && stock != null) {
+          if (this.validate(stockOptionList, queryDate, ivSeries, stock)) {
             this.stock.emit(stock);
             this.stockOptionList.emit(stockOptionList);
             this.ivSeries.emit(ivSeries);
@@ -130,9 +130,20 @@ export class OptionDetailsQueryFormComponent implements OnInit {
           this.loading.emit(true);
         },
         () => { // on completion
+          console.log("option detail loading completed!");
           this.loading.emit(false);
         }
       );
   }
 
+  validate(stockOptionList: StockOption[], queryDate: Date, ivSeries: IVSeries, stock: Stock): boolean{
+    var result = false;
+    if(stockOptionList != null && queryDate != null && ivSeries != null && stock != null){
+      if(ivSeries.timePointList != null && ivSeries.timePointList.find(x => x.date.getTime() == queryDate.getTime()) != null)
+        if(stock.historyList != null && stock.historyList.find(x => x.priceDate.getTime() == queryDate.getTime()) != null)
+          result = true;
+    }
+    console.log(result);
+    return result;
+  }
 }

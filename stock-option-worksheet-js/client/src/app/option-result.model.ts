@@ -5,6 +5,12 @@ function _convertStringToDate(input: string): Date {
     return result;
 }
 
+function _fieldValue(obj: any, field: string){
+    if(obj[field] != undefined)
+        return obj[field];
+    else return null;
+}
+
 export class StockOption {
     id: number;
     ticker: string;
@@ -15,13 +21,15 @@ export class StockOption {
     dateTime: Date;
 
     constructor(obj? : any){
-        this.id = obj && obj.id || null;
-        this.ticker = obj && obj.ticker || null;
-        this.name = obj && obj.name || null;
-        this.historyList = obj && obj.historyList || null;
-        this.optionType = obj && obj.optionType || null;
-        this.strikePrice = obj && obj.strikePrice || null;
-        this.dateTime = obj && _convertStringToDate(obj.dateTime) || null;
+        if(obj != null){
+            this.id = _fieldValue(obj, "id"); 
+            this.ticker = _fieldValue(obj, "ticker");
+            this.name = _fieldValue(obj, "name");
+            this.historyList = _fieldValue(obj, "historyList");
+            this.optionType = _fieldValue(obj, "optionType");
+            this.strikePrice = _fieldValue(obj, "strikePrice");
+            this.dateTime = _convertStringToDate(_fieldValue(obj, "dateTime"));
+        }
     }
 }
 
@@ -38,15 +46,17 @@ export class StockOptionHistory {
     iv: number;
 
     constructor(obj?: any){
-        this.id = obj && obj.id || null;
-        this.stockOptionId = obj && obj.stockOptionId || null;
-        this.priceDate = obj && _convertStringToDate(obj.priceDate) || null;
-        this.openPrice = obj && obj.openPrice || null;
-        this.dailyHigh = obj && obj.dailyHigh || null;
-        this.dailyLow = obj && obj.dailyLow || null;
-        this.settlePrice = obj && obj.settlePrice || null;
-        this.openInterest = obj && obj.openInterest || null;
-        this.iv = obj && obj.iv || null;
+        if(obj != null){
+            this.id = _fieldValue(obj, "id");
+            this.stockOptionId = _fieldValue(obj, "stockOptionId");
+            this.priceDate = _convertStringToDate(_fieldValue(obj, "priceDate"));
+            this.openPrice = _fieldValue(obj, "openPrice");
+            this.dailyHigh = _fieldValue(obj, "dailyHigh");
+            this.dailyLow = _fieldValue(obj, "dailyLow");
+            this.settlePrice = _fieldValue(obj, "settlePrice");
+            this.openInterest = _fieldValue(obj, "openInterest");
+            this.iv = _fieldValue(obj, "iv");
+        }
     }
 }
 

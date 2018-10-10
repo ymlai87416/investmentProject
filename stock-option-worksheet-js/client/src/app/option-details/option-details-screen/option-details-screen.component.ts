@@ -32,7 +32,8 @@ export class OptionDetailsScreenComponent implements OnInit {
   isInCorrectState(): boolean{
     let result =  this.stock != null && this.selectedDate != null
       && this.stockOptionList != null && this.ivSeries != null;
-    
+   
+    //check valid
     return result;
   }
 }
