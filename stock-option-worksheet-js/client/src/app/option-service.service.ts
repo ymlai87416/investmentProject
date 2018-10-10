@@ -89,9 +89,15 @@ export class OptionService {
       let responseArr = response as StockOption[];
       return responseArr.map(item => {
         // console.log("raw item", item); // uncomment if you want to debug
-        if (item.historyList)
-          item.historyList = item.historyList.map(history => new StockOptionHistory(history));
-        return new StockOption(item);
+        
+        if (item.historyList){
+          let newHistoryList = item.historyList.map(history => new StockOptionHistory(history));
+          //console.log(item.historyList);
+          //console.log(newHistoryList);
+          item.historyList = newHistoryList;
+        }
+        let result= new StockOption(item);
+        return result;
       });
     });
   }

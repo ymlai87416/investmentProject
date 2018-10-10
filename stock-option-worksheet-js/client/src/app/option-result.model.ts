@@ -25,6 +25,7 @@ export class StockOption {
     }
 }
 
+//TODO: this class init method screw 0 value
 export class StockOptionHistory {
     id: number;
     stockOptionId: number;

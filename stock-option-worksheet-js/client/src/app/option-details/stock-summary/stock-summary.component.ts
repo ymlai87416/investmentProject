@@ -46,7 +46,7 @@ export class StockSummaryComponent implements OnInit {
   }
 
   getCurrentIV(ivseries: IVSeries, selectedDate: Date): number{
-    console.log(ivseries);
+    //console.log(ivseries);
     if(ivseries != null){
       let tp = ivseries.timePointList.find(x => x.date.getTime() == selectedDate.getTime());
       if(tp != null) return tp.value;
