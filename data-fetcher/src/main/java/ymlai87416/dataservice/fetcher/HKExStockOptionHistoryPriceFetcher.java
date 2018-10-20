@@ -30,7 +30,7 @@ import java.util.zip.ZipInputStream;
 public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
 
     private Logger log = LoggerFactory.getLogger(HKExStockOptionHistoryPriceFetcher.class);
-    private static String urlFormaturlFormat = "http://www.hkex.com.hk/eng/stat/dmstat/dayrpt/dqe%s.zip";
+    private static String urlFormaturlFormat = "https://www.hkex.com.hk/eng/stat/dmstat/dayrpt/dqe%s.zip";
     private static String zipFileNameFormat="dqe%s.zip";
 
     private static SimpleDateFormat linkDateFormat = new SimpleDateFormat("yyMMdd");
@@ -38,6 +38,8 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
     Date startDate;
     Date endDate;
     Date processedDate;
+
+    boolean skipExist = true;
 
     @Autowired
     ExchangeService exchangeService;
@@ -272,18 +274,20 @@ public class HKExStockOptionHistoryPriceFetcher implements Fetcher{
                         DailyPrice dailyPrice = symbolDialyPriceList.get(i);
 
                         if(dbVersion != null){
-                            dbVersion.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
-                            dbVersion.setOpenPrice(dailyPrice.getOpenPrice());
-                            dbVersion.setHighPrice(dailyPrice.getHighPrice());
-                            dbVersion.setLowPrice(dailyPrice.getLowPrice());
-                            dbVersion.setClosePrice(dailyPrice.getClosePrice());
-                            dbVersion.setAdjClosePrice(dailyPrice.getAdjClosePrice());
-                            dbVersion.setVolume(dailyPrice.getVolume());
-                            dbVersion.setIv(dailyPrice.getIv());
-                            dbVersion.setOpenInterest(dailyPrice.getOpenInterest());
+                            if (!skipExist) {
+                                dbVersion.setLastUpdatedDate(Utilities.getCurrentSQLDateTime());
+                                dbVersion.setOpenPrice(dailyPrice.getOpenPrice());
+                                dbVersion.setHighPrice(dailyPrice.getHighPrice());
+                                dbVersion.setLowPrice(dailyPrice.getLowPrice());
+                                dbVersion.setClosePrice(dailyPrice.getClosePrice());
+                                dbVersion.setAdjClosePrice(dailyPrice.getAdjClosePrice());
+                                dbVersion.setVolume(dailyPrice.getVolume());
+                                dbVersion.setIv(dailyPrice.getIv());
+                                dbVersion.setOpenInterest(dailyPrice.getOpenInterest());
 
-                            //save and break;
-                            dailyPriceService.saveDailyPrice(dbVersion);
+                                //save and break;
+                                dailyPriceService.saveDailyPrice(dbVersion);
+                            }
                         }
                         else{
                             dailyPrice.setSymbol(symbolDB);

@@ -8,4 +8,5 @@ import java.util.*;
 
 public interface DailyPriceRepository  extends JpaRepository<DailyPrice, Long> {
     List<DailyPrice> findBySymbolInAndPriceDateBetween(Collection<Symbol> symbolList, Date startDate, Date endDate);
+    List<DailyPrice> findBySymbolInstrumentEqualsAndSymbolTickerLikeAndPriceDateBetween(String instrument, String ticker, Date startDate, Date endDate);
 }

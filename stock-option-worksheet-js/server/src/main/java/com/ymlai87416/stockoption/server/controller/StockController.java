@@ -35,7 +35,7 @@ public class StockController {
     }
 
     @RequestMapping("/stock/{id}")
-    @CrossOrigin(origins="http://localhost:4200")
+    @CrossOrigin(origins={"http://localhost:4200", "http://stockoption.ymlai87416.com"})
     public List<Stock> findStockBySEHKCode(@PathVariable String id,
                                            @RequestParam(value="startDate", required=false) String startDate,
                                            @RequestParam(value="endDate", required=false) String endDate)
@@ -68,7 +68,7 @@ public class StockController {
     }
 
     @RequestMapping("/stock/{id}/stats")
-    @CrossOrigin(origins="http://localhost:4200")
+    @CrossOrigin(origins={"http://localhost:4200", "http://stockoption.ymlai87416.com"})
     public StockStatistic getStockStatistic(@PathVariable String id,
                                             @RequestParam(value="startDate", required=false) String startDate,
                                             @RequestParam(value="endDate", required=false) String endDate)

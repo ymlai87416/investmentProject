@@ -7,6 +7,11 @@
     ></app-option-iv-query-form>
 <br />
 
+<img
+    style="float: right;"
+    *ngIf="loading"
+    src='assets/images/loading.gif' />
+
 <app-implied-volatility-summary
     [hidden]="ivseriesResult == null || ivseriesResult == undefined"
     [ivseriesResult]="ivseriesResult"

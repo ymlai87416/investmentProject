@@ -1,5 +1,8 @@
 package com.ymlai87416.stockoption.server.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ymlai87416.stockoption.server.domain.DailyPrice;
 import com.ymlai87416.stockoption.server.domain.StockOptionUnderlyingAsset;
 import com.ymlai87416.stockoption.server.domain.Symbol;
@@ -36,6 +39,7 @@ public class StockOptionController {
     private DailyPriceRepository dailyPriceRepository;
     private StockOptionUnderlyingAssetRepository stockOptionUnderlyingAssetRepository;
     List<StockOptionUnderlyingAsset> underlyingAssetsList;
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private StockOptionController(SymbolRepository symbolRepository,
@@ -59,7 +63,7 @@ public class StockOptionController {
     }
 
     @RequestMapping("/stockOption/sehk/{id}")
-    @CrossOrigin(origins="http://localhost:4200")
+    @CrossOrigin(origins={"http://localhost:4200", "http://stockoption.ymlai87416.com"})
     public List<StockOption> findStockOptionBySEHKCode(@PathVariable String id,
                                                        @RequestParam(value="startDate", required=false) String startDate,
                                                        @RequestParam(value="endDate", required=false) String endDate) throws Exception {
@@ -89,17 +93,31 @@ public class StockOptionController {
                 boolean initChild = false;
                 if(startEndDate != null && startEndDate.length == 2
                         && startEndDate[0] != null && startEndDate[1] != null){
+                    logger.debug("Before query 1");
+
+                    
                     searchResult = symbolRepository.findByInstrumentEqualsAndTickerLikeAndDailyPriceListPriceDateBetween
                             ("HK Stock Option", tickerPattern, startEndDate[0], startEndDate[1]);
 
+                    logger.debug("After query 1");
+
+                    /*
                     childSearchResult = dailyPriceRepository.findBySymbolInAndPriceDateBetween(searchResult,
                             startEndDate[0], startEndDate[1]);
+                    */
+
+                    childSearchResult = dailyPriceRepository.findBySymbolInstrumentEqualsAndSymbolTickerLikeAndPriceDateBetween("HK Stock Option", tickerPattern,
+                            startEndDate[0], startEndDate[1]);
+
+                    logger.debug("After query 2");
 
                     for(Symbol symbol : searchResult){
                         List<DailyPrice> dailyPriceList =
                                 childSearchResult.stream().filter(x -> x.getSymbol().getId() == symbol.getId()).collect(Collectors.toList());
                         symbol.setDailyPriceList(dailyPriceList);
                     }
+
+                    logger.debug("After consolidate");
 
                     initChild = true;
                 }
@@ -114,12 +132,13 @@ public class StockOptionController {
             } else
                 return Collections.emptyList();
         } catch (Exception ex) {
+            logger.error("Exception occurred", ex);
             throw new Exception("Invalid SEHK code.");
         }
     }
 
     @RequestMapping("/stockOption/code/{id}")
-    @CrossOrigin(origins="http://localhost:4200")
+    @CrossOrigin(origins={"http://localhost:4200", "http://stockoption.ymlai87416.com"})
     public List<StockOption> findStockOptionByOptionCode(@PathVariable String id,
                                                          @RequestParam(value="startDate", required=false) String startDate,
                                                          @RequestParam(value="endDate", required=false) String endDate)
@@ -169,7 +188,7 @@ public class StockOptionController {
     }
 
     @RequestMapping("/stockOption/underlyingAsset")
-    @CrossOrigin(origins="http://localhost:4200")
+    @CrossOrigin(origins={"http://localhost:4200", "http://stockoption.ymlai87416.com"})
     public List<StockOptionUnderlyingAsset> getAllStockOptionUnderlyingAsset()
     {
         return underlyingAssetsList;

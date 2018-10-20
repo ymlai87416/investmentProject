@@ -138,9 +138,8 @@ export class OptionDetailsQueryFormComponent implements OnInit {
 
   validate(stockOptionList: StockOption[], queryDate: Date, ivSeries: IVSeries, stock: Stock): boolean{
     var result = false;
-    if(stockOptionList != null && queryDate != null && ivSeries != null && stock != null){
-      if(ivSeries.timePointList != null && ivSeries.timePointList.find(x => x.date.getTime() == queryDate.getTime()) != null)
-        if(stock.historyList != null && stock.historyList.find(x => x.priceDate.getTime() == queryDate.getTime()) != null)
+    if(stockOptionList != null && queryDate != null && stock != null){
+      if(stock.historyList != null && stock.historyList.find(x => x.priceDate.getTime() == queryDate.getTime()) != null)
           result = true;
     }
     console.log(result);

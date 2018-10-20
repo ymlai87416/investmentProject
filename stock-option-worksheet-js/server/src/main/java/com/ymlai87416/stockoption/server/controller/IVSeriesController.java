@@ -1,5 +1,8 @@
 package com.ymlai87416.stockoption.server.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ymlai87416.stockoption.server.domain.*;
 import com.ymlai87416.stockoption.server.model.*;
 import com.ymlai87416.stockoption.server.service.*;
@@ -27,6 +30,8 @@ public class IVSeriesController {
     private StockOptionUnderlyingAssetRepository stockOptionUnderlyingAssetRepository;
     List<StockOptionUnderlyingAsset> underlyingAssetsList;
 
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     private IVSeriesController(TimeSeriesRepository timeSeriesRepository,
                                TimePointRepository timePointRepository,
@@ -39,7 +44,7 @@ public class IVSeriesController {
     }
 
     @RequestMapping("/ivseries/{id}")
-    @CrossOrigin(origins="http://localhost:4200")
+    @CrossOrigin(origins={"http://localhost:4200", "http://stockoption.ymlai87416.com"})
     public List<IVSeries> findStockBySEHKCode(@PathVariable String id,
                                               @RequestParam(value="startDate", required=false) String startDate,
                                               @RequestParam(value="endDate", required=false) String endDate)

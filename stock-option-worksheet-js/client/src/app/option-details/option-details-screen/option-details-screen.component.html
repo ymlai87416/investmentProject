@@ -7,6 +7,12 @@
     (error)="error=$event"
     ></app-option-details-query-form>
 <br/>
+
+<img
+    style="float: right;"
+    *ngIf="loading"
+    src='assets/images/loading.gif' />
+
 <app-stock-summary
     [hidden]="!isInCorrectState()"
     [stock]="stock"

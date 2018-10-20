@@ -27,8 +27,8 @@ import java.util.*;
  */
 @Component("HKExStockOptionIVFetcher")
 public class HKExStockOptionIVFetcher implements Fetcher {
-    private static String url = "http://www.hkex.com.hk/eng/sorc/options/statistics_hv_iv.aspx";
-    private static String fileDownloadUrlFormat = "http://www.hkex.com.hk/eng/sorc/options/statistics_hv_iv.aspx?action=csv&type=3&ucode=%s";
+    private static String url = "https://www.hkex.com.hk/eng/sorc/options/statistics_hv_iv.aspx";
+    private static String fileDownloadUrlFormat = "https://www.hkex.com.hk/eng/sorc/options/statistics_hv_iv.aspx?action=csv&type=3&ucode=%s";
     private static String fileName = "index.html";
     private static String urlEncoding = "UTF-8";
 
