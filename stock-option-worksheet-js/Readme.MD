@@ -32,7 +32,7 @@ Written in angular 5 and semantic UI to provide a decent front-end to users.
 
 #### Build
 
-    npm build --prod
+    ng build --prod
 
 #### Deploy
 
