@@ -1,11 +1,11 @@
 # Investment Project
 
-This project is a personnel project for me to analyse HK stock. Beside just using stock price time-series, I also make use of the option data to refine my decision making.
+This project is a personal  project for me to analyze HK stock. Besides just using stock price time-series, I also make use of the option data to refine my decision making.
 
 Making use of option data allows me to trade on every market situation. You can bet on a rise, a fall or a stagnant market.
-I learnt to use option data from an investment course I attend.
+I learned to use option data from an investment course I attend.
 
-The project is organized in the folllowing structure.
+The project is organized in the following structure.
 
 ```
 investmentProject
@@ -25,10 +25,10 @@ investmentProject
 ```
 
 ### Data
-    For other people who is interested to download option data from HKEx from Jan 2017 to Sept 2018
+    For other people who are interested to download option data from HKEx from Jan 2017 to Sept 2018
 
 ### data-etcher
-    a fetcher written in java/spring to fetch data from internet. it is scheduled to run in 3:00am HKT every day.
+    a fetcher written in java/spring to fetch data from the internet. it is scheduled to run in 3:00am HKT every day.
 
 ### database
     database schema for mysql database

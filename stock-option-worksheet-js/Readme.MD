@@ -1,6 +1,6 @@
 # Stock option worksheet presented by Super rich fund
 
-Start by three man in HK to spectaculate HK stock.
+Started by three mans in HK to spectaculate HK stock.
 
 Production URL: [http://stockoption.ymlai87416.com/](http://stockoption.ymlai87416.com/)
 
@@ -24,7 +24,7 @@ Written in spring-boot and current deploy in AWS as a standalone JAR with embedd
 
 ### Client
 
-Written in angular 5 and semantic UI to provide a decent front-end to user to use the system.
+Written in angular 5 and semantic UI to provide a decent front-end to users.
 
 #### Run
 
